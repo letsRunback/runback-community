@@ -62,6 +62,13 @@ const nextConfig: NextConfig = {
       // mechanism walkthrough. /use-cases is a real, distinct page again.
       { source: "/standard", destination: "/how-it-works", permanent: true },
       { source: "/kit", destination: "/enterprise", permanent: true },
+      // Nothing on the site links to /signup, but it is the URL people
+      // type. /login already handles both cases — it sends a magic link
+      // whether or not the address has an account — so the 404 was
+      // costing sign-ups for no reason. Temporary, not permanent: a real
+      // /signup page may exist later, and a 308 would be cached by
+      // browsers that saw it first.
+      { source: "/signup", destination: "/login", permanent: false },
     ];
   },
 
