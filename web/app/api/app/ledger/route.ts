@@ -20,14 +20,14 @@ async function ledgerAllowed(session: { orgId: string; email?: string }): Promis
 export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ ok: false, error: "Not signed in." }, { status: 401 });
-  if (!(await ledgerAllowed(session))) return NextResponse.json({ ok: false, error: "The audit ledger is an Enterprise feature." }, { status: 402 });
+  if (!(await ledgerAllowed(session))) return NextResponse.json({ ok: false, error: "The audit ledger is unavailable on this plan." }, { status: 402 });
   return NextResponse.json({ ok: true, status: await ledgerStatus(session.orgId, isDemo(session)) });
 }
 
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ ok: false, error: "Not signed in." }, { status: 401 });
-  if (!(await ledgerAllowed(session))) return NextResponse.json({ ok: false, error: "The audit ledger is an Enterprise feature." }, { status: 402 });
+  if (!(await ledgerAllowed(session))) return NextResponse.json({ ok: false, error: "The audit ledger is unavailable on this plan." }, { status: 402 });
   const demo = isDemo(session);
 
   let body: { action?: string };

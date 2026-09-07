@@ -62,9 +62,9 @@ export default async function LedgerPage() {
         <GateOverlay
           badge={`Audit ledger · ${planBadgeText("ledger")}`}
           title="An org-wide, tamper-evident system of record."
-          lead="Every agent decision sealed into an append-only, hash-chained ledger with signed checkpoints — change, delete, or insert any past decision and verification catches it at the exact one. Available on the Enterprise plan."
+          lead="Every agent decision sealed into an append-only, hash-chained ledger with signed checkpoints — change, delete, or insert any past decision and verification catches it at the exact one. Available on every plan, including Community."
           ctaHref={UPGRADE_HREF}
-          ctaLabel="Upgrade to Enterprise →"
+          ctaLabel="See your ledger →"
         >
           <LedgerControls initial={status} />
           <p className="empty ledger-verify-note">

@@ -30,7 +30,17 @@ engine they drive, which remains commercial.
 
 
 The core developer toolchain — free to run. Capture, single-step replay and
-inspection, evals + the release gate, the per-run signed digest, redaction.
+inspection, evals + the release gate, the per-run signed digest, the
+org-wide tamper-evident audit ledger, redaction.
+
+The ledger moved here from the commercial table on 2026-09-07. It was a
+deliberate commercial decision, not a correction: the hosted free tier now
+mirrors the Community edition, and the ledger is the capability that makes
+LICENSE's "signed re-executable audit record" mean something an auditor can
+check. Recording the reasoning because the split between "the per-run signed
+digest" and "the org-wide ledger" is exactly where this document and LICENSE
+read differently, and the next person will need to know which way it was
+settled.
 
 This list and the table below predate several shipped features (policy
 tooling, cost/benchmark/regulatory reporting, incidents, approvals, prompt
@@ -63,7 +73,6 @@ listed here just means it's off entirely without any license at all.
 | **Deep replay — H2 salience projection** | `projectInput` / `toolKeyP` / `llmKeyP` and `key_projection` handling in `packages/replay/src/cassette.ts` |
 | **Deep replay — H3 hybrid / whole-run / counterfactual** | `packages/replay/src/enterprise/{hybrid,fromEvents,runReplay,native}.ts`, `packages/sdk/src/replay.ts`, `web/lib/enterprise/replay/wholeRun.ts`, `web/app/api/runs/[run_id]/{reexecute,bisect,cassette,audit}`, `web/app/api/app/fleet-determinism` |
 | **Native deterministic capture** | `packages/replay/src/native.ts`, `native/`, `linux/` |
-| **Tamper-evident audit ledger** | `web/lib/ledger.ts`, `web/lib/ledgerCore.ts`, `web/app/api/app/ledger`, `web/app/api/audit/verify`, `sql/create_ledger*` |
 | **Golden corpus (regression mining)** — Growth-tier license, not Enterprise-exclusive | `web/lib/golden.ts`, `web/lib/goldenCore.ts`, `web/app/api/golden/*`, `web/app/app/golden/*`, `sql/create_golden.sql` |
 | Entitlement & license gate | `web/lib/entitlements.ts`, `web/lib/license.ts`, `web/lib/planGate.ts` |
 | Multi-tenant workspaces + RBAC | `web/lib/auth.ts` (orgs/memberships/sessions), `web/app/app/team/*`, `web/app/api/team/*`, `sql/create_tenancy.sql` |

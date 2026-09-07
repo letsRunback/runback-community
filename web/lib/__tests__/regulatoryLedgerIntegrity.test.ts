@@ -24,8 +24,15 @@ import { join } from "node:path";
 const SRC = join(__dirname, "..", "enterprise", "regulatory.ts");
 const present = existsSync(SRC);
 const src = present ? readFileSync(SRC, "utf8") : "";
+// Bounded by the NEXT evidence-type branch, whatever it is, rather than by a
+// named one. The end marker was `if (evidenceType === "audit_log")`; merging
+// audit_log with report changed that line, the marker stopped matching, and the
+// slice silently ran on into the redaction branch — so the test failed against
+// code it was never meant to be reading. A structural boundary cannot rot that
+// way when a neighbouring branch is edited.
 const ledgerBranch = src.slice(src.indexOf('if (evidenceType === "ledger")'));
-const branch = ledgerBranch.slice(0, ledgerBranch.indexOf('if (evidenceType === "audit_log")'));
+const nextBranch = ledgerBranch.slice(1).search(/if \(evidenceType ===/);
+const branch = nextBranch === -1 ? ledgerBranch : ledgerBranch.slice(0, nextBranch + 1);
 
 describe.skipIf(!present)("regulatory ledger control", () => {
   it("locates the ledger branch (guard against a vacuous test)", () => {

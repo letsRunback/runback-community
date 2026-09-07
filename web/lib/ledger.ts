@@ -57,7 +57,7 @@ const db = () => getAdminClient() as any;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const readDb = (orgId: string) => getTenantClient(orgId).client as any;
 
-/** Fail-closed second layer: the tamper-evident ledger is an Enterprise capability.
+/** Fail-closed second layer: the tamper-evident ledger is gated on the `ledger` feature (Community and above).
  *  Enforced here (beneath the route gate) so a patched route can't unlock it. */
 async function assertLedger(orgId: string, demo: boolean): Promise<void> {
   const { assertFeature } = await import("@/lib/planGate");
