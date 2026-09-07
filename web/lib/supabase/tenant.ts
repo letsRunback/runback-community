@@ -28,6 +28,7 @@
  */
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient } from "@/lib/supabase/admin";
+import { assertNotExpired } from "@/lib/supabase/keyExpiry";
 import crypto from "crypto";
 
 /** How long a minted token is valid. Long enough for one request, not a session. */
@@ -137,6 +138,10 @@ export function getTenantClient(orgId: string): TenantClient {
     }
     return { client: getAdminClient(), usedTenantRole: false };
   }
+  // An expired anon key does not degrade — every tenant-scoped read returns
+  // 401 and the app shows zero runs, which is exactly the shape of the
+  // incident this client exists to prevent. Fail with the reason instead.
+  assertNotExpired("NEXT_PUBLIC_SUPABASE_ANON_KEY", anonKey);
   const client = createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { authorization: `Bearer ${token}` } },

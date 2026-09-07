@@ -1,33 +1,32 @@
-"use client";
-
 import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 
 /**
- * Cookieless page analytics, on infrastructure we already pay for.
+ * Cookieless page analytics, decided on the SERVER.
  *
- * Runback has no acquisition measurement at all: PLG events record what a user
- * does AFTER signing up (first_run_captured, first_eval_run), but nothing
- * records how anyone arrived. Launching into a funnel you cannot see means
- * repeating whatever felt productive rather than whatever worked.
+ * Runback had no acquisition measurement: PLG events record what a user does
+ * after signing up, nothing recorded how they arrived. Vercel Web Analytics
+ * rather than a paid tool because it is included with the hosting already in
+ * use, and cookieless — so /privacy's "no analytics cookies, no consent banner
+ * required" stays true.
  *
- * Vercel Web Analytics rather than Plausible — which this file used briefly —
- * for the plainest reason available: Plausible is a paid subscription, and a
- * company with no customers yet should not add a recurring bill to answer a
- * question its existing host already answers. Vercel is the host, so this adds
- * no vendor relationship and no new place customer data could go.
+ * This is deliberately NOT a client component and deliberately does NOT gate on
+ * a NEXT_PUBLIC_ variable. Two earlier attempts did and both silently shipped
+ * nothing: NEXT_PUBLIC_* values are inlined at BUILD time, so the flag has to
+ * exist before the build that reads it, and NEXT_PUBLIC_VERCEL_ENV only exists
+ * when a project has "automatically expose system environment variables"
+ * switched on — which this one does not. Both failures looked identical from
+ * outside: a green deploy, and no data. For the one component whose job is to
+ * tell us whether any of this works, a gate that can fail silently is the wrong
+ * gate.
  *
- * The privacy constraint that drove the original choice still holds. /privacy
- * says: "No analytics, tracking, or advertising cookies are deployed on this
- * site. Because we use only strictly necessary cookies, no consent banner is
- * required." Vercel Web Analytics is cookieless and stores no cross-site
- * identifiers, so that sentence stays true and no banner appears.
- *
- * Off unless NEXT_PUBLIC_ANALYTICS is set, so the Community edition and every
- * self-hosted deployment load nothing and send nothing. Not a courtesy: a
- * self-hoster's traffic is theirs, and phoning home would contradict the reason
- * they self-host.
+ * A server component reads ordinary server env at request time, so the decision
+ * is made where the truth already lives. RUNBACK_SELF_HOSTED is set by
+ * docker-compose for every self-hosted deployment and nowhere else, so a
+ * self-hoster loads nothing and sends nothing without configuring anything —
+ * their traffic is theirs. ANALYTICS=off disables it anywhere.
  */
 export default function Analytics() {
-  if (process.env.NEXT_PUBLIC_ANALYTICS !== "on") return null;
+  if (process.env.ANALYTICS === "off") return null;
+  if (process.env.RUNBACK_SELF_HOSTED) return null;
   return <VercelAnalytics />;
 }

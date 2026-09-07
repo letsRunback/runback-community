@@ -83,18 +83,20 @@ listed here just means it's off entirely without any license at all.
 
 | Feature | Key files |
 |---|---|
-| **Deep replay — H1 environment capture** | `packages/sdk/src/envCapture.ts`, `captureEnv` path in `packages/sdk/src/collector.ts` |
+| **Deep replay — H1 environment capture** | `packages/sdk/src/enterprise/envCapture.ts`, `captureEnv` path in `packages/sdk/src/collector.ts` |
 | **Deep replay — H2 salience projection** | `projectInput` / `toolKeyP` / `llmKeyP` and `key_projection` handling in `packages/replay/src/cassette.ts` |
 | **Deep replay — H3 hybrid / whole-run / counterfactual** | `packages/replay/src/enterprise/{hybrid,fromEvents,runReplay,native}.ts`, `packages/sdk/src/replay.ts`, `web/lib/enterprise/replay/wholeRun.ts`, `web/app/api/runs/[run_id]/{reexecute,bisect,cassette,audit}`, `web/app/api/app/fleet-determinism` |
-| **Native deterministic capture** | `packages/replay/src/native.ts`, `native/`, `linux/` |
+| **Native deterministic capture** | `packages/replay/src/enterprise/native.ts`, `native/`, `linux/` |
 | **Golden corpus (regression mining)** — Growth-tier license, not Enterprise-exclusive | `web/lib/golden.ts`, `web/lib/goldenCore.ts`, `web/app/api/golden/*`, `web/app/app/golden/*`, `sql/create_golden.sql` |
 | Entitlement & license gate | `web/lib/entitlements.ts`, `web/lib/license.ts`, `web/lib/planGate.ts` |
 | Multi-tenant workspaces + RBAC | `web/lib/auth.ts` (orgs/memberships/sessions), `web/app/app/team/*`, `web/app/api/team/*`, `sql/create_tenancy.sql` |
 | Fleet control-room dashboard | `web/lib/dashboard.ts`, `web/components/app/charts.tsx`, `web/app/app/page.tsx` (dashboard branch) |
 | SSO (OIDC) | `web/lib/sso.ts`, `web/app/app/settings/sso/*`, `web/app/api/auth/sso/*`, `web/app/api/settings/sso/*`, `sql/create_sso.sql` |
-| Alerting | `web/lib/alerts.ts`, `web/app/app/alerts/*`, `sql/create_alerts.sql` |
-| Usage metering & billing | `web/lib/usage.ts`, `web/lib/billing.ts`, `web/app/app/usage/*`, `web/app/app/upgrade/*`, `web/app/api/billing/*`, `web/app/api/cron/retention/*`, `sql/create_usage.sql`, `sql/create_billing.sql` |
+| Alerting | `web/lib/enterprise/alerts.ts`, `web/app/app/alerts/*`, `sql/create_alerts.sql` |
+| Usage metering & billing | `web/lib/usage.ts`, `web/lib/enterprise/billing.ts`, `web/app/app/usage/*`, `web/app/app/upgrade/*`, `web/app/api/billing/*`, `web/app/api/cron/retention/*`, `sql/create_usage.sql`, `sql/create_billing.sql` |
 | Long retention | enforced in `web/lib/usage.ts` / `web/lib/entitlements.ts` |
+
+Paths in the Key files column are given for reference against the full source tree. This document ships in the Community repository, where those files are — correctly — absent: excluding them is what makes that repository Community-only. Their names are listed so the licence boundary is auditable, not so the files can be found there.
 
 This table is not exhaustive — see the caveat under Community above. Check
 `minPlanFor()` in `web/lib/entitlements.ts` before assuming an unlisted

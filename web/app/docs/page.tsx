@@ -944,6 +944,37 @@ docker compose up -d
               (<code>rb_comp_</code>) and SCIM (<code>rb_scim_</code>) keys are separate scopes
               and rotate the same way.
             </p>
+
+            {/* 36 API routes enforce a minimum role, and none of it was written
+                down. A customer's first sign that `viewer` is genuinely
+                read-only should not be a 403 in their own logs. */}
+            <h3 className="docs-h3">Roles</h3>
+            <p>
+              Every member of a workspace holds one of four roles. They are cumulative — each
+              one can do everything the role below it can, plus more — and they are enforced
+              server-side on every request, not in the interface. A session cookie and a
+              full-access API key are both subject to the same check.
+            </p>
+            <Table
+              headers={["Role", "Can do"]}
+              rows={[
+                ["viewer", "Read runs, traces, evals, policies, dashboards and audit records. Cannot change anything, and cannot trigger any action that spends money."],
+                ["member", "Everything a viewer can, plus the day-to-day work: replay a step, re-execute or bisect a run, write policies and prompts, create datasets, run evals, enrol golden cases, open and update incidents."],
+                ["admin", "Everything a member can, plus workspace administration: issue and revoke API keys, decide approvals, configure SSO, SIEM and model keys, place legal holds, issue external auditor grants, calibrate judges, and manage the subscription."],
+                ["owner", "Everything an admin can. The owner cannot be removed from the workspace and is the billing contact."],
+              ]}
+            />
+            <Note>
+              Replay, re-execution and eval runs call a model provider and are therefore billed
+              to whoever&apos;s key is configured. That is why they require <code>member</code>
+              rather than <code>viewer</code>: entitlement answers whether the workspace may use
+              a feature, which is a different question from whether this person may spend on it.
+            </Note>
+            <p>
+              Roles are set when you invite someone (<strong>Settings → Team</strong>) and can be
+              changed there afterwards. Invitations, role changes and removals are all written to
+              the administrative audit log with the actor and source IP.
+            </p>
           </Section>
 
           <Section id="api-runs" title="Runs API">
