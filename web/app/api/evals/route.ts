@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from "next/server";
 import { createEval } from "@/lib/eval/evals";
 import { runEval } from "@/lib/eval/runner";
 import { getDataset } from "@/lib/eval/datasets";
-import { REPLAY_MODELS } from "@/lib/replay/runStep";
+import { replayModelAllowlist } from "@/lib/replay/runStep";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { isDemoRequest } from "@/lib/demoMode";
 import { communityEvalGate } from "@/lib/entitlements";
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
   // Only an allowlisted override is honoured; otherwise each item replays its captured model.
   const model_id =
-    body.model_id && REPLAY_MODELS.includes(body.model_id) ? body.model_id : null;
+    body.model_id && replayModelAllowlist().includes(body.model_id) ? body.model_id : null;
 
   const ev = await createEval({
     dataset_id: body.dataset_id,

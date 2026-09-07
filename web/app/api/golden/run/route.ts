@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { runGoldenSuite } from "@/lib/golden";
-import { REPLAY_MODELS } from "@/lib/replay/runStep";
+import { replayModelAllowlist } from "@/lib/replay/runStep";
 import { DEMO_MODE, isDemoEmail } from "@/lib/demoMode";
 
 export const runtime = "nodejs";
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   let body: { model?: string };
   try { body = await req.json(); } catch { body = {}; }
-  const model = body.model && REPLAY_MODELS.includes(body.model) ? body.model : undefined;
+  const model = body.model && replayModelAllowlist().includes(body.model) ? body.model : undefined;
   const demo = DEMO_MODE || isDemoEmail(session.email);
 
   // A candidate-model suite run re-executes each incident LIVE on that model —

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { REPLAY_MODELS } from "@/lib/replay/models";
+import { useReplayModels } from "@/lib/replay/useReplayModels";
 import type { PromptMessage, PromptVariable } from "@/lib/prompts/render";
 import type { PromptModel } from "@/lib/prompts/prompts";
 
@@ -23,6 +23,7 @@ export default function PlaygroundPanel({
   model: PromptModel;
   params: Record<string, unknown>;
 }) {
+  const models = useReplayModels();
   const [values, setValues] = useState<Record<string, string>>(
     Object.fromEntries(variables.map((v) => [v.name, v.default ?? ""]))
   );
@@ -79,7 +80,7 @@ export default function PlaygroundPanel({
       <div className="pol-field">
         <span>Compare against <em>(optional — runs the same rendered prompt against each)</em></span>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-          {REPLAY_MODELS.filter((m) => m !== model.model_id).map((m) => (
+          {models.filter((m) => m !== model.model_id).map((m) => (
             <label key={m} className="mono" style={{ fontSize: "0.78rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
               <input type="checkbox" checked={compare.includes(m)} onChange={() => toggleCompare(m)} />
               {m}

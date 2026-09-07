@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useReplayModels } from "@/lib/replay/useReplayModels";
 import { REPLAY_MODELS } from "@/lib/replay/models";
 
 const short = (h?: string | null) => (h ? `${h.slice(0, 10)}…${h.slice(-6)}` : "—");
@@ -11,9 +12,16 @@ type Verify = any;
 type Counter = any;
 
 export default function WholeRunReplay({ runId, capturedModel }: { runId: string; capturedModel: string }) {
+  const models = useReplayModels();
   const [verify, setVerify] = useState<Verify | null>(null);
   const [vLoading, setVLoading] = useState(false);
   const [model, setModel] = useState(REPLAY_MODELS.find((m) => m !== capturedModel) || REPLAY_MODELS[0]);
+  // The initial value is seeded from the build-time list, which on an
+  // air-gapped deployment may name a model this site cannot reach. Derive the
+  // effective choice during render rather than correcting state in an effect:
+  // the stored value stays whatever the user picked, and the one that is sent
+  // is always a model this deployment actually serves.
+  const selectedModel = models.includes(model) ? model : (models[0] ?? model);
   const [counter, setCounter] = useState<Counter | null>(null);
   const [cLoading, setCLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,7 +37,7 @@ export default function WholeRunReplay({ runId, capturedModel }: { runId: string
       const res = await fetch(`/api/runs/${runId}/bisect`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ candidates: REPLAY_MODELS }),
+        body: JSON.stringify({ candidates: models }),
       });
       const data = await res.json();
       if (!res.ok) { setErr(data.error || "Failed."); return; }
@@ -46,7 +54,7 @@ export default function WholeRunReplay({ runId, capturedModel }: { runId: string
     try {
       const res = await fetch(`/api/runs/${runId}/reexecute`, {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify(mode === "verify" ? { mode } : { mode, model }),
+        body: JSON.stringify(mode === "verify" ? { mode } : { mode, model: selectedModel }),
       });
       const data = await res.json();
       if (!res.ok) { setErr(data.error || "Failed."); return; }
@@ -85,8 +93,8 @@ export default function WholeRunReplay({ runId, capturedModel }: { runId: string
           <div className="wrr-k mono">Replay on another model</div>
           <p className="wrr-p">Re-runs the whole run on a different model — continues <em>past</em> the first divergence, reusing recorded tool outputs by content, and shows every step that would change.</p>
           <div className="wrr-row">
-            <select className="replay-select" value={model} onChange={(e) => setModel(e.target.value)}>
-              {REPLAY_MODELS.map((m) => <option key={m} value={m}>{m}{m === capturedModel ? "  (captured)" : ""}</option>)}
+            <select className="replay-select" value={selectedModel} onChange={(e) => setModel(e.target.value)}>
+              {models.map((m) => <option key={m} value={m}>{m}{m === capturedModel ? "  (captured)" : ""}</option>)}
             </select>
             <button className="btn-fill" onClick={() => run("counterfactual")} disabled={cLoading}>{cLoading ? "Replaying…" : "Replay whole run"}</button>
           </div>
@@ -111,7 +119,7 @@ export default function WholeRunReplay({ runId, capturedModel }: { runId: string
               {counter.frontier && (
                 <div className="wrr-cf">
                   <div><span className="wrr-cf-k mono">recorded</span><span>{counter.frontier.recorded}</span></div>
-                  <div><span className="wrr-cf-k mono" data-cf>{model}</span><span>{counter.frontier.counterfactual}</span></div>
+                  <div><span className="wrr-cf-k mono" data-cf>{selectedModel}</span><span>{counter.frontier.counterfactual}</span></div>
                 </div>
               )}
             </div>
@@ -123,7 +131,7 @@ export default function WholeRunReplay({ runId, capturedModel }: { runId: string
       <div className="wrr-card wrr-bisect">
         <div className="wrr-k mono">Bisect the timeline</div>
         <p className="wrr-p">Binary-search an ordered candidate list (a model-upgrade or prompt timeline) for the exact change that flips this run&apos;s decisions — in log₂ probes, not one-by-one.</p>
-        <button className="btn-line" onClick={bisect} disabled={bLoading}>{bLoading ? "Bisecting…" : `Bisect ${REPLAY_MODELS.length} candidates`}</button>
+        <button className="btn-line" onClick={bisect} disabled={bLoading}>{bLoading ? "Bisecting…" : `Bisect ${models.length} candidates`}</button>
         {bisectR && (
           <div className={`wrr-verdict ${bisectR.firstBadIndex === null ? "ok" : "warn"}`}>
             <strong>{bisectR.firstBadIndex === null ? "No regression across the list" : `Culprit: ${bisectR.culprit}`}</strong>

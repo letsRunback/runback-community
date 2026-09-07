@@ -3,7 +3,7 @@ import { requireSession } from "@/lib/auth";
 import { can } from "@/lib/entitlements";
 import { planBadgeText } from "@/lib/plans";
 import { listRuns } from "@/lib/runs";
-import { REPLAY_MODELS } from "@/lib/replay/models";
+import { replayModelAllowlist } from "@/lib/replay/runStep";
 import { DEMO_MODE, isDemoEmail } from "@/lib/demoMode";
 import GateOverlay from "../../GateOverlay";
 import BisectPanel from "./BisectPanel";
@@ -31,7 +31,7 @@ export default async function BisectPage() {
   const body = (
     <BisectPanel
       runs={runOptions}
-      defaultCandidates={[...REPLAY_MODELS]}
+      defaultCandidates={replayModelAllowlist()}
       defaultRunId={runOptions[0]?.run_id}
     />
   );

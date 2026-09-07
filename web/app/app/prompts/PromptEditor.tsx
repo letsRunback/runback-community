@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useReplayModels } from "@/lib/replay/useReplayModels";
 import { REPLAY_MODELS } from "@/lib/replay/models";
 import { extractVariableNames, type PromptMessage, type PromptVariable } from "@/lib/prompts/render";
 
@@ -32,9 +33,16 @@ interface VarMeta {
 const DEFAULT_VAR_META: VarMeta = { required: true, default: "", description: "" };
 
 export default function PromptEditor() {
+  const models = useReplayModels();
   const [name, setName] = useState("");
   const [template, setTemplate] = useState(EXAMPLE);
   const [modelId, setModelId] = useState(REPLAY_MODELS[0]);
+  // The initial value is seeded from the build-time list, which on an
+  // air-gapped deployment may name a model this site cannot reach. Derive the
+  // effective choice during render rather than correcting state in an effect:
+  // the stored value stays whatever the user picked, and the one that is sent
+  // is always a model this deployment actually serves.
+  const selectedModel = models.includes(modelId) ? modelId : (models[0] ?? modelId);
   const [commitMessage, setCommitMessage] = useState("");
   const [variableMeta, setVariableMeta] = useState<Record<string, VarMeta>>({});
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -85,7 +93,7 @@ export default function PromptEditor() {
         body: JSON.stringify({
           name,
           template: parsed,
-          model: { provider: providerFor(modelId), model_id: modelId },
+          model: { provider: providerFor(selectedModel), model_id: selectedModel },
           variables,
           commit_message: commitMessage || null,
         }),
@@ -114,8 +122,8 @@ export default function PromptEditor() {
       </div>
       <div className="pol-field">
         <span>Model</span>
-        <select className="replay-select" style={{ width: "auto", minWidth: 220 }} value={modelId} onChange={(e) => setModelId(e.target.value)}>
-          {REPLAY_MODELS.map((m) => <option key={m} value={m}>{m}</option>)}
+        <select className="replay-select" style={{ width: "auto", minWidth: 220 }} value={selectedModel} onChange={(e) => setModelId(e.target.value)}>
+          {models.map((m) => <option key={m} value={m}>{m}</option>)}
         </select>
       </div>
       <div className="pol-field">

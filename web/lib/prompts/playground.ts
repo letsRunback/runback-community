@@ -5,7 +5,7 @@
  * core the debugger and the eval runner already depend on.
  */
 import { getOrgKeys } from "@/lib/modelKeys";
-import { runStep, REPLAY_MODELS, type RunStepResult } from "@/lib/replay/runStep";
+import { runStep, replayModelAllowlist, type RunStepResult } from "@/lib/replay/runStep";
 import { interpolateTemplate, validateVariables, type PromptMessage, type PromptVariable } from "./render";
 import type { PromptModel } from "./prompts";
 
@@ -45,7 +45,7 @@ export async function testPromptVariants(orgId: string, input: PlaygroundInput):
   // once per garbage entry, so an unvalidated compare_model_ids list could
   // otherwise turn one request into an unbounded number of real model calls.
   const validCompare = (input.compareModelIds ?? [])
-    .filter((id) => id !== input.model.model_id && REPLAY_MODELS.includes(id))
+    .filter((id) => id !== input.model.model_id && replayModelAllowlist().includes(id))
     .slice(0, MAX_COMPARE_MODELS);
   const modelIds = [input.model.model_id, ...validCompare];
   const keys = input.demo ? undefined : await getOrgKeys(orgId);

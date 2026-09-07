@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase/admin";
 import { getCaller } from "@/lib/apiAuth";
 import { orgHasFeature } from "@/lib/planGate";
-import { runStep, REPLAY_MODELS } from "@/lib/replay/runStep";
+import { runStep, REPLAY_MODELS, replayModelAllowlist } from "@/lib/replay/runStep";
 import { simulateStep } from "@/lib/replay/simulate";
 import { rateLimit, clientIp } from "@/lib/rateLimit";
 import { showcaseOrgId } from "@/lib/demoMode";
@@ -51,9 +51,9 @@ export async function POST(req: NextRequest) {
   // Validate model_id against the allowlist before any DB or auth work.
   // An arbitrary model string would be forwarded to a provider SDK and billed
   // against a configured API key without any rate or entitlement control.
-  if (body.model_id && !REPLAY_MODELS.includes(body.model_id)) {
+  if (body.model_id && !replayModelAllowlist().includes(body.model_id)) {
     return NextResponse.json(
-      { error: "model_id is not in the replay allowlist.", allowed: REPLAY_MODELS },
+      { error: "model_id is not in the replay allowlist.", allowed: replayModelAllowlist() },
       { status: 400 }
     );
   }

@@ -11,7 +11,8 @@
  * There is exactly one implementation of replay; this is an alias for it.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { POST as replayPost, REPLAY_MODELS } from "@/app/api/replay/route";
+import { POST as replayPost } from "@/app/api/replay/route";
+import { replayModelAllowlist } from "@/lib/replay/runStep";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -42,9 +43,9 @@ export async function POST(
   }
 
   const model = body.model ?? body.model_id;
-  if (model && !REPLAY_MODELS.includes(model)) {
+  if (model && !replayModelAllowlist().includes(model)) {
     return NextResponse.json(
-      { error: "model is not in the replay allowlist.", allowed: REPLAY_MODELS },
+      { error: "model is not in the replay allowlist.", allowed: replayModelAllowlist() },
       { status: 400 }
     );
   }

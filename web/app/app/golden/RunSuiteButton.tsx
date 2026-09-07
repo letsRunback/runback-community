@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { REPLAY_MODELS } from "@/lib/replay/models";
+import { useReplayModels } from "@/lib/replay/useReplayModels";
 
 interface RunResult {
   total: number;
@@ -19,6 +19,7 @@ interface RunResult {
  * button to do it.
  */
 export default function RunSuiteButton({ deepReplayAllowed }: { deepReplayAllowed: boolean }) {
+  const models = useReplayModels();
   const router = useRouter();
   const [model, setModel] = useState("");
   const [running, setRunning] = useState(false);
@@ -55,7 +56,7 @@ export default function RunSuiteButton({ deepReplayAllowed }: { deepReplayAllowe
         disabled={running}
       >
         <option value="">Integrity check (no model — free)</option>
-        {deepReplayAllowed && REPLAY_MODELS.map((m) => (
+        {deepReplayAllowed && models.map((m) => (
           <option key={m} value={m}>Candidate: {m}</option>
         ))}
       </select>

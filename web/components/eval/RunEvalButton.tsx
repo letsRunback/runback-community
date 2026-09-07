@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { REPLAY_MODELS } from "@/lib/replay/models";
+import { useReplayModels } from "@/lib/replay/useReplayModels";
 
 /** Kicks off an eval over a dataset and navigates to its results when done.
  *
@@ -21,6 +21,7 @@ export default function RunEvalButton({
   disabled?: boolean;
   basePath?: "/evals" | "/app/evals";
 }) {
+  const models = useReplayModels();
   const router = useRouter();
   const [modelId, setModelId] = useState("captured");
   const [running, setRunning] = useState(false);
@@ -61,7 +62,7 @@ export default function RunEvalButton({
         disabled={running}
       >
         <option value="captured">Replay each item&apos;s captured model</option>
-        {REPLAY_MODELS.map((m) => (
+        {models.map((m) => (
           <option key={m} value={m}>
             Override with {m}
           </option>

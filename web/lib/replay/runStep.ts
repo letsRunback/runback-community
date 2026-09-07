@@ -26,9 +26,62 @@ export { REPLAY_MODELS };
 
 type ProviderId = "groq" | "openai" | "anthropic";
 
+/**
+ * The models this deployment will actually replay against.
+ *
+ * REPLAY_MODELS is the hosted-service list, and it is a security control: an
+ * arbitrary model string from a request body is forwarded to a provider SDK and
+ * billed against a configured key, so the route validates against a fixed set
+ * rather than trusting the caller.
+ *
+ * An air-gapped site runs its own models, which are named for whatever it
+ * loaded — "mistral-7b-instruct", "Qwen2.5-72B-Instruct" — none of which can
+ * appear in a list compiled here. Extras therefore come from the environment,
+ * which is operator-controlled and never request-controlled: the property that
+ * makes the allowlist a control is that the caller cannot extend it, and that
+ * is preserved.
+ */
+export function replayModelAllowlist(): string[] {
+  const parse = (v: string | undefined) =>
+    (v ?? "").split(",").map((m) => m.trim()).filter(Boolean);
+
+  // Two settings, because appending is not what an air-gapped site wants. There
+  // the eleven built-ins are unreachable, and listing them is worse than not
+  // listing them: every one is a dead option in a dropdown, and the first is
+  // the default. RUNBACK_REPLAY_MODELS replaces the list outright; if it is set
+  // it wins, and the built-ins do not appear at all.
+  const replace = parse(process.env.RUNBACK_REPLAY_MODELS);
+  if (replace.length) return replace;
+
+  const extra = parse(process.env.RUNBACK_EXTRA_REPLAY_MODELS);
+  return extra.length ? [...REPLAY_MODELS, ...extra] : [...REPLAY_MODELS];
+}
+
+/** True when the operator declared this model id in the environment. */
+function isOperatorDeclared(modelId: string): boolean {
+  // Under RUNBACK_REPLAY_MODELS every entry is operator-declared, including any
+  // that happen to share a name with a built-in. Without this a replaced list
+  // containing "llama-3.3-70b-versatile" would match the Groq name pattern and
+  // be sent to api.groq.com — the exact failure the setting exists to avoid.
+  if ((process.env.RUNBACK_REPLAY_MODELS ?? "").trim()) {
+    return replayModelAllowlist().includes(modelId);
+  }
+  return replayModelAllowlist().includes(modelId) && !REPLAY_MODELS.includes(modelId);
+}
+
 /** Infer the provider from a model id, falling back to the captured provider. */
 function providerForModel(modelId: string, captured: string): ProviderId {
   const m = modelId.toLowerCase();
+  // Operator-declared models are checked BEFORE the name patterns, not after.
+  // The things sites actually self-host are Qwen, Llama and Mixtral, whose
+  // names all match the Groq pattern below — so an air-gapped deployment
+  // running its own Qwen would have had every replay sent to api.groq.com,
+  // which is precisely the failure this whole path exists to prevent.
+  if (isOperatorDeclared(modelId)) {
+    for (const p of ["openai", "anthropic", "groq"] as const) {
+      if (providerBaseUrl(p)) return p;
+    }
+  }
   if (/^claude/.test(m)) return "anthropic";
   if (/^(gpt-(3|4)|o1|o3|o4|chatgpt|text-)/.test(m)) return "openai";
   if (/gpt-oss|llama|qwen|kimi|mixtral|gemma|deepseek/.test(m)) return "groq";
@@ -44,19 +97,74 @@ const PROVIDER_KEY_ENV: Record<ProviderId, string> = {
   anthropic: "ANTHROPIC_API_KEY",
 };
 
+/**
+ * Point a provider at something other than its public API.
+ *
+ * Without this, replay — and therefore evals, golden suites, the prompt
+ * playground, model diff and judge calibration, all of which route through
+ * runStep — can only ever reach api.openai.com, api.anthropic.com and
+ * api.groq.com. On an air-gapped deployment those hosts do not resolve, so the
+ * single most-demoed capability in the product is dead on arrival with no way
+ * to configure around it. Such a site runs its own OpenAI-compatible endpoint
+ * (vLLM, Ollama, LiteLLM, Azure OpenAI, an internal gateway); this is how they
+ * name it.
+ *
+ * Deliberately RUNBACK_-prefixed rather than the conventional OPENAI_BASE_URL.
+ * An unprefixed name set for some other tool in the same environment would
+ * silently redirect every model call this deployment makes — which is a
+ * security event, not a convenience, and not one anybody would think to look
+ * for.
+ */
+const PROVIDER_BASE_URL_ENV: Record<ProviderId, string> = {
+  groq: "RUNBACK_GROQ_BASE_URL",
+  openai: "RUNBACK_OPENAI_BASE_URL",
+  anthropic: "RUNBACK_ANTHROPIC_BASE_URL",
+};
+
+/** Read and validate a provider's base-URL override. Returns undefined when unset. */
+export function providerBaseUrl(provider: ProviderId): string | undefined {
+  const raw = process.env[PROVIDER_BASE_URL_ENV[provider]]?.trim();
+  if (!raw) return undefined;
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error(
+      `${PROVIDER_BASE_URL_ENV[provider]} is not a valid absolute URL: "${raw}". ` +
+        "Expected something like http://vllm.internal:8000/v1"
+    );
+  }
+  // "vllm.internal:8000" does not fail URL parsing — it parses as scheme
+  // "vllm.internal:", so a missing http:// lands here rather than above.
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(
+      `${PROVIDER_BASE_URL_ENV[provider]} must be http or https, got "${parsed.protocol}" ` +
+        `from "${raw}". Include the scheme, e.g. http://vllm.internal:8000/v1`
+    );
+  }
+  return raw;
+}
+
 /** Build a language model for replay, or throw a friendly error if the key is missing. */
 export function resolveModel(modelId: string, captured: string, keys?: Partial<Record<ProviderId, string>>): any {
   const provider = providerForModel(modelId, captured);
+  const baseURL = providerBaseUrl(provider);
   // A per-org BYOK key wins over the deployment env var.
   const key = keys?.[provider] || process.env[PROVIDER_KEY_ENV[provider]];
-  if (!key) {
+  if (!key && !baseURL) {
     throw new Error(
       `No ${provider} model key configured — add one in Settings → Model keys (or set ${PROVIDER_KEY_ENV[provider]}) to replay "${modelId}".`
     );
   }
-  if (provider === "openai") return createOpenAI({ apiKey: key })(modelId);
-  if (provider === "anthropic") return createAnthropic({ apiKey: key })(modelId);
-  return createGroq({ apiKey: key })(modelId);
+  // Self-hosted inference endpoints frequently take no auth at all. Requiring a
+  // key we would only forward to an operator-chosen internal host would block
+  // the air-gapped case for no security gain — the operator already decided
+  // where these requests go by setting the base URL. The placeholder exists
+  // because the provider SDKs require the field to be a string.
+  const apiKey = key || "not-required";
+  if (provider === "openai") return createOpenAI({ apiKey, baseURL })(modelId);
+  if (provider === "anthropic") return createAnthropic({ apiKey, baseURL })(modelId);
+  return createGroq({ apiKey, baseURL })(modelId);
 }
 
 /** Provider messages require array content for non-system roles; wrap bare strings. */
