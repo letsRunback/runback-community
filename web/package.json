@@ -22,6 +22,7 @@
     "@runback/schema": "*",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.1",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^6.0.204",
     "geist": "^1.7.2",
     "jose": "^6.2.3",

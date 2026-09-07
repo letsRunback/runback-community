@@ -95,6 +95,7 @@ export default function Dpa() {
             <tbody>
               <tr><td><strong>Supabase Inc.</strong></td><td>Managed Postgres database and authentication infrastructure — stores agent trace records, account data, and audit logs for the managed cloud.</td><td>United States</td></tr>
               <tr><td><strong>Resend Inc.</strong></td><td>Transactional email delivery — sends magic-link sign-in emails and alert notifications. Receives recipient email address and message content only.</td><td>United States</td></tr>
+              <tr><td><strong>Vercel Inc.</strong></td><td>Application hosting and edge delivery for the managed cloud — processes requests, and provides cookieless page analytics for the marketing site (aggregate views, referrer, country). Receives request data in transit; agent trace content is stored by Supabase, not Vercel.</td><td>United States</td></tr>
             </tbody>
           </table>
           <p>

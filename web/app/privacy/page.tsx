@@ -179,6 +179,21 @@ export default function Privacy() {
             strictly necessary cookies, no consent banner is required and no
             non-essential cookies can be configured through your browser.
           </p>
+          <p>
+            We do measure page views, using <strong>Vercel Web Analytics</strong> —
+            our hosting provider&apos;s own measurement, so no additional company
+            receives your data. It sets <strong>no cookies</strong> and stores no
+            cross-site identifier. We see aggregate counts: which pages were viewed,
+            which site referred you, and a country. We cannot identify you from it,
+            and it is never joined to your account. That is why the paragraph above
+            remains true and why there is no consent banner to dismiss.
+          </p>
+          <p>
+            Analytics run on this hosted site only. A self-hosted Runback deployment
+            loads no analytics script and sends us nothing — the measurement is switched
+            off unless the operator configures it, because a self-hoster&apos;s traffic
+            is theirs.
+          </p>
 
           <h2>11. Change of control</h2>
           <p>

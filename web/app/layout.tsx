@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans, IBM_Plex_Mono, Fraunces } from "next/font/google";
 import { siteUrl } from "@/lib/deployment";
+import Analytics from "@/components/Analytics";
 import "./globals.css";
 
 // Fraunces: an editorial serif for big display numbers in the control room —
@@ -127,6 +128,7 @@ export default function RootLayout({
     <html lang="en" className={`${plexSans.variable} ${plexMono.variable} ${fraunces.variable}`}>
       <body>
         {children}
+        <Analytics />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()) }}
