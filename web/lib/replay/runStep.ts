@@ -162,7 +162,17 @@ export function resolveModel(modelId: string, captured: string, keys?: Partial<R
   // where these requests go by setting the base URL. The placeholder exists
   // because the provider SDKs require the field to be a string.
   const apiKey = key || "not-required";
-  if (provider === "openai") return createOpenAI({ apiKey, baseURL })(modelId);
+  if (provider === "openai") {
+    const openai = createOpenAI({ apiKey, baseURL });
+    // @ai-sdk/openai v3 defaults to OpenAI's Responses API (POST /v1/responses).
+    // api.openai.com serves it; vLLM, Ollama and LiteLLM — what a self-hosted
+    // site actually runs — implement /v1/chat/completions and generally do not
+    // implement /v1/responses at all. So against a configured endpoint, ask for
+    // the Chat Completions surface explicitly. Caught by the live-fire test,
+    // which is the only thing here that speaks to a real HTTP server; every
+    // stubbed test passed against a request no self-hosted server would accept.
+    return baseURL ? openai.chat(modelId) : openai(modelId);
+  }
   if (provider === "anthropic") return createAnthropic({ apiKey, baseURL })(modelId);
   return createGroq({ apiKey, baseURL })(modelId);
 }
@@ -320,8 +330,13 @@ export async function runStep(input: RunStepInput): Promise<RunStepResult> {
   const messages = input.edits?.messages ?? captured.messages;
 
   // Use the captured model by default; allow an allowlisted override.
+  // Against the EFFECTIVE allowlist, not the build-time constant. With the
+  // constant, an operator-declared model passed the route's check and then
+  // silently lost here — runStep fell back to the captured model, replayed
+  // that instead, and reported success. The user would have seen a green
+  // result for a model they never selected, which is worse than an error.
   const modelId =
-    input.model_id && REPLAY_MODELS.includes(input.model_id)
+    input.model_id && replayModelAllowlist().includes(input.model_id)
       ? input.model_id
       : input.model.model_id;
   const modelChanged = modelId !== input.model.model_id;

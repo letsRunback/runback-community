@@ -46,6 +46,46 @@ function supportAddress(): string {
   return process.env.SUPPORT_EMAIL || "hello@runback.dev";
 }
 
+/**
+ * Deliver through an operator's own SMTP relay.
+ *
+ * `RUNBACK_SMTP_URL` is a standard connection URL and carries everything
+ * needed, so there is one variable rather than the usual six:
+ *
+ *   smtp://relay.internal:25                 (no auth, common inside a network)
+ *   smtp://user:pass@relay.internal:587      (STARTTLS — nodemailer upgrades)
+ *   smtps://user:pass@relay.internal:465     (implicit TLS)
+ *
+ * Imported dynamically so nodemailer is never pulled into a deployment that
+ * does not use it, and so a broken install degrades to "email is unavailable"
+ * rather than taking down every route that happens to import this module.
+ *
+ * Returns false and logs on any failure, exactly like the Resend path — no
+ * caller of send() should have to know which transport ran.
+ */
+async function sendViaSmtp(
+  url: string,
+  msg: { to: string; subject: string; html: string; text: string; replyTo?: string }
+): Promise<boolean> {
+  try {
+    const nodemailer = (await import("nodemailer")).default;
+    const transporter = nodemailer.createTransport(url);
+    await transporter.sendMail({
+      from: fromAddress(),
+      to: msg.to,
+      replyTo: msg.replyTo,
+      subject: msg.subject,
+      html: msg.html,
+      text: msg.text,
+    });
+    return true;
+  } catch (e) {
+    // Deliberately does not echo the URL: it commonly embeds a password.
+    console.error("[email] smtp send failed:", (e as Error).message);
+    return false;
+  }
+}
+
 /** Low-level send. Returns false (and logs) if unconfigured or on error; never throws. */
 async function send(msg: {
   to: string;
@@ -54,9 +94,17 @@ async function send(msg: {
   text: string;
   replyTo?: string;
 }): Promise<boolean> {
+  // SMTP first. An air-gapped or on-prem deployment cannot reach Resend's REST
+  // API at all, and every such site already has an internal relay — Exchange,
+  // Postfix, a corporate smarthost. Setting RUNBACK_SMTP_URL is an unambiguous
+  // statement that mail goes through it, so it wins over any Resend key that
+  // happens to be lying around in the same environment.
+  const smtpUrl = process.env.RUNBACK_SMTP_URL;
+  if (smtpUrl) return sendViaSmtp(smtpUrl, msg);
+
   const key = process.env.RESEND_API_KEY;
   if (!key) {
-    console.log("[email] RESEND_API_KEY not set — skipping send to", msg.to);
+    console.log("[email] no RUNBACK_SMTP_URL or RESEND_API_KEY set — skipping send to", msg.to);
     return false;
   }
   try {
