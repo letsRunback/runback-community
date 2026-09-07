@@ -11,7 +11,7 @@ export const metadata = pageMetadata({
   path: "/get-started",
   title: "Get started — self-host free or managed cloud",
   description:
-    `Get started with Runback — managed cloud from ${PLAN_INFO.starter.priceLabel}, live in minutes, or request self-host access for the free Community edition in your own cloud.`,
+    `Get started with Runback — managed cloud from ${PLAN_INFO.starter.priceLabel}, live in minutes, or clone the source and self-host the free Community edition in your own cloud.`,
 });
 
 export default function GetStarted() {

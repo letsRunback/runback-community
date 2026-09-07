@@ -7,8 +7,10 @@ because Section 4 restricts the field of use. Do not describe Runback as "open
 source". "Source-available" is accurate.
 
 The Enterprise Features are licensed separately under the Runback Commercial
-Licence (LICENSE-ENTERPRISE) and their source is not included in the Community
-repository.
+Licence (LICENSE-ENTERPRISE). Some of their source is present in this
+repository and some is not — LICENSING.md is the authoritative map. Presence of
+source is not a licence to run it: Enterprise Features require a valid licence
+token regardless of whether you can read the code.
 
 1. DEFINITIONS
 

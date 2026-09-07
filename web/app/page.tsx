@@ -335,7 +335,11 @@ await dbg.finish({ output: res.text, status: "success" });`}</code>
                 ["CI release gate — block regressions before deploy", "n", "y"],
                 ["Signed, tamper-evident audit export", "n", "y"],
                 ["Self-host, data never leaves your perimeter", "~", "y"],
-                ["Regulatory controls (EU AI Act · CPS 230 · NIST)", "n", "y"],
+                // "~" not "n", to match lib/competitors.ts — the sourced file, which
+                // notes LangSmith publishes an EU AI Act crosswalk (no CPS 230 or NIST).
+                // /vs/langsmith renders "partial" for this exact row from that file, so a
+                // hard "n" here had us contradicting ourselves on two public pages.
+                ["Regulatory controls (EU AI Act · CPS 230 · NIST)", "~", "y"],
               ] as [string, string, string][]).map(([f, a, b]) => (
                 <div className="cmp-row" key={f}>
                   <div className="cmp-feat">{f}</div>
@@ -346,7 +350,7 @@ await dbg.finish({ output: res.text, status: "success" });`}</code>
             </div>
           </div>
           <p className="cmp-verified-note">
-            Verified July 2026 — reviewed quarterly, and every ✓ above runs green in{" "}
+            Verified September 2026 — reviewed quarterly, and every ✓ above runs green in{" "}
             <a href="https://github.com/letsRunback/runback-proofs/actions" target="_blank" rel="noopener noreferrer" style={{ color: "var(--brand)" }}>public CI ↗</a>.
           </p>
         </div>
@@ -388,7 +392,7 @@ await dbg.finish({ output: res.text, status: "success" });`}</code>
         <div className="mk">
           <h2>Ship the next agent knowing you can defend the last one.</h2>
           <p style={{ color: "var(--text-secondary)", maxWidth: "50ch", margin: "0.75rem auto 0" }}>
-            Start free on managed cloud, request self-host access, or book a call — we&apos;ll walk it through live in your environment.
+            Start free on managed cloud, clone the source and self-host, or book a call — we&apos;ll walk it through live in your environment.
           </p>
           <p className="mono" style={{ color: "var(--text-muted)", fontSize: "0.85rem", margin: "0.6rem auto 0" }}>
             Managed plans from {PLAN_INFO.starter.priceLabel} —{" "}

@@ -70,7 +70,7 @@ export default function GetStartedForm({ emailEnabled = false }: { emailEnabled?
     // The repo is private during the beta, so the clone only works once we have
     // sent an invite. Showing the command with that stated up front is honest;
     // showing it bare (as this did) sent everyone to a 404.
-    const selfhost = "git clone https://github.com/letsRunback/runback\ncd runback && docker compose up";
+    const selfhost = "git clone https://github.com/letsRunback/runback-community\ncd runback-community && docker compose up";
     return (
       <div>
         <div className="gs-reveal-h mono">✓ You&apos;re in</div>

@@ -102,9 +102,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Viewers have read-only access." }, { status: 403 });
   }
 
-  // Step replay is a Pro+ feature (trial-aware via orgHasFeature).
+  // Step replay is a Community Licence capability (COMMUNITY_LICENCE_FEATURES),
+  // so this passes on every tier including free. The gate stays because the flag
+  // is still the single place that decides.
   if (!await orgHasFeature(session.orgId, "step_replay")) {
-    return NextResponse.json({ error: "Step replay requires a Pro plan or higher." }, { status: 403 });
+    return NextResponse.json({ error: "Step replay is unavailable on this plan." }, { status: 403 });
   }
 
   // Filter by org rather than fetching-then-comparing. The old form matched on

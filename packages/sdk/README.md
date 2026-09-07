@@ -71,7 +71,7 @@ path, above) captures automatically from inside this package.
 If your framework already emits OpenTelemetry GenAI spans (LangGraph,
 CrewAI, OpenLLMetry/Traceloop, OpenInference, ...), you don't need this SDK
 at all — point your OTLP/HTTP exporter directly at Runback's ingest endpoint
-instead: `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://<host>/api/otel`. That
+instead: `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://<host>/api/otel/v1/traces`. That
 receiver lives in the Runback platform, not in this npm package.
 
 ## Policy enforcement (block before it runs)
@@ -97,8 +97,8 @@ The gate runs **before** the tool executes — synchronous, no network in your a
 ## Environment variables
 
 ```bash
-RUNBACK_API_KEY=rk_...          # from runback.dev/app/settings
-RUNBACK_INGEST_URL=...          # default: https://runback.dev/api/ingest
+RUNBACK_API_KEY=rb_live_...          # from runback.dev/app/settings
+RUNBACK_INGEST_URL=...          # origin only; the SDK appends /api/ingest. default: http://localhost:3000
                                 # self-hosted: your own endpoint
 ```
 
@@ -112,7 +112,7 @@ withDebugger(model, { runName: "...", redact: "standard" })
 withDebugger(model, { runName: "...", redact: "strict" })
 
 // custom patterns
-withDebugger(model, { runName: "...", redact: { custom: [/ACCT-\d{8}/g] } })
+withDebugger(model, { runName: "...", redact: { customPatterns: [{ name: "account", regex: /ACCT-\d{8}/g }] } })
 ```
 
 PII is stripped **inside your process** before anything is sent to Runback or written to disk.
@@ -126,7 +126,7 @@ Run Runback entirely in your own infrastructure. Your traces never leave your pe
 docker compose up
 
 # then point the SDK at your own ingest endpoint
-RUNBACK_INGEST_URL=http://localhost:4000/api/ingest
+RUNBACK_INGEST_URL=http://localhost:3000
 ```
 
 Full self-host docs: [runback.dev/docs](https://runback.dev/docs)

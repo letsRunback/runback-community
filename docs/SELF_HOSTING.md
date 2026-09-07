@@ -27,7 +27,7 @@ key). You have three options, all keeping data in your control:
    for f in sql/*.sql; do psql "$DATABASE_URL" -f "$f"; done
    ```
 
-   This used to say "the three files in `sql/`". There are 89, and the missing
+   This used to say "the three files in `sql/`". There are 99, and the missing
    ones are not optional extras — they include the admin audit log, legal holds,
    SIEM sinks, uptime checks, and `scope_run_id_per_org.sql`, which makes tenant
    isolation a composite `(org_id, run_id)` key the database enforces rather
@@ -69,7 +69,7 @@ key). You have three options, all keeping data in your control:
    ANTHROPIC_API_KEY=...
    ```
 
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` was listed here previously and is read by no
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` **is required** for database-enforced tenant isolation. This previously said no code read it — true when written, not now: `web/lib/supabase/tenant.ts` uses it as the `apikey` header while the per-tenant token goes in `Authorization`. Without it, reads fall back to the service-role client and row-level security is bypassed, silently. See `docs/RLS-PLAN.md`.
    code in the project — you do not need it.
 
 3. Build and run:

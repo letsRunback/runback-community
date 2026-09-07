@@ -83,8 +83,18 @@ layer where the fully-assembled context window is visible.
    npm install
    ```
 
-2. **Supabase** — create a project, then run the three files in `sql/` in the
-   SQL editor (`create_api_keys.sql`, `create_runs.sql`, `create_events.sql`).
+2. **Supabase** — create a project, then run **every** file in `sql/` in
+   order:
+
+   ```bash
+   for f in sql/*.sql; do psql "$DATABASE_URL" -f "$f"; done
+   ```
+
+   This used to say "the three files in `sql/`". There are 99, and the rest are
+   not optional extras — they include the admin audit log, the ledger, legal
+   holds, and `scope_run_id_per_org.sql`, which makes tenant isolation a
+   composite `(org_id, run_id)` key the database enforces. `docs/SELF_HOSTING.md`
+   was corrected for this; the README was not.
 
 3. **Env** — copy `.env.example` to `.env.local` (web) / `.env` (root + example)
    and fill in:
@@ -167,7 +177,7 @@ Traceloop, OpenInference, native OTel — i.e. LangGraph, CrewAI, LlamaIndex, �
 the OTLP endpoint:
 
 ```bash
-OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://<your-host>/api/otel
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=https://<your-host>/api/otel/v1/traces
 OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/json
 OTEL_EXPORTER_OTLP_TRACES_HEADERS=authorization=Bearer <RUNBACK_API_KEY>
 ```

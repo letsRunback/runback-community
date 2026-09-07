@@ -114,8 +114,8 @@ export default function UseCases() {
           <p style={{ fontSize: "0.92rem", color: "var(--text-secondary)", lineHeight: 1.6, maxWidth: "68ch", marginBottom: "1.4rem" }}>
             loan-approval-agent auto-approves a loan it should have escalated.
             The only record is a log line: &quot;approved, 2:47 AM.&quot;
-            Below is the actual before/after — not a mockup, the real timeline
-            from the incident walkthrough.
+            Below is an illustrative before/after from the incident walkthrough —
+            a worked example, not a customer story. We are too early to have one.
           </p>
         </div>
         <div className="mk"><IncidentCompare /></div>

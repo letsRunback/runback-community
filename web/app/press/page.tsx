@@ -65,7 +65,7 @@ export default function Press() {
             <p style={{ fontSize: "0.95rem", color: "var(--text-secondary)", lineHeight: 1.7, margin: 0 }}>
               Runback is the system of record for AI agent decisions — the first platform that
               captures every model call, tool use, and reasoning step, then re-executes any of them
-              deterministically from the exact captured context. Teams use it to reproduce incidents
+              deterministically from the exact captured context. It is built to reproduce incidents
               in under 5 minutes, gate every model or prompt change in CI, and export a tamper-evident
               audit artifact mapping to EU AI Act, APRA CPS 230, and NIST AI RMF requirements. The
               platform runs fully inside the customer&apos;s perimeter on Enterprise.

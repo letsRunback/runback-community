@@ -116,7 +116,7 @@ const SEED: Record<Plan, PlanSeed> = {
     tagline: "For regulated environments.",
     features: [
       "Everything in Pro, in your perimeter",
-      "SSO (OIDC) · managed audit keys · signed ledger",
+      "SSO (OIDC) · managed audit keys · legal holds",
       "Unmetered runs · unlimited retention",
       "Self-host in your VPC · data residency",
       "Regulatory dashboard — EU AI Act · ISO 42001 · NIST AI RMF · APRA CPS 230/234 · GDPR · ISO 27001",

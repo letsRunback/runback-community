@@ -38,9 +38,16 @@ const RELEASES: ChangelogRelease[] = [
   {
     version: "2026.08.31",
     date: "2026-08-31",
-    summary: "Completed the tenant-isolation (RLS) migration and added session revocation.",
+    summary: "Advanced the tenant-isolation (RLS) migration and added session revocation.",
     highlights: [
-      "Every remaining read path now runs on the tenant-scoped client — Postgres row-level security is load-bearing, not decorative, on every query.",
+      // Corrected 2026-09-07. This previously read "Every remaining read path now
+      // runs on the tenant-scoped client ... on every query", which was not true
+      // when written and is not true now: eight modules use the tenant client and
+      // 136 still use the service-role client, which bypasses RLS. /security has
+      // always described the migration accurately as partial, so this page was
+      // contradicting our own security page — on the claim a reader is most
+      // likely to quote back at us.
+      "Ledger, compliance, runs, narratives, security findings and external grants now read through the tenant-scoped client, where Postgres row-level security is load-bearing. Other read paths and all writes still run as a role that bypasses RLS — see /security for the current, precise state.",
       "Sessions can now be explicitly revoked (not just expired), with the revocation itself recorded in the admin audit trail.",
     ],
   },

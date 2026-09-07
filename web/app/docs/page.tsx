@@ -275,7 +275,7 @@ export RUNBACK_INGEST_URL=https://runback.dev   # self-hosted? use your own orig
               <div className="docs-card">
                 <div className="docs-card-k">Step replay</div>
                 <p>Re-execute a specific LLM call with a different model or prompt. Runback freezes the recorded inputs and makes a fresh call to the model you choose. Use it to bisect which model change caused a regression.</p>
-                <span className="docs-tier docs-tier-pro">Pro+</span>
+                <span className="docs-tier">Community</span>
               </div>
             </div>
             <Screen src="/run-trace-scroll.png" label="Time-travel replay — scrub any step" />
@@ -335,7 +335,7 @@ export RUNBACK_INGEST_URL=https://runback.dev   # self-hosted? use your own orig
             <Screen src="/policy-coverage-gaps.png" label="Coverage gaps — tools nothing is watching, ranked by call volume" />
           </Section>
 
-          <Section id="concepts-evals" title="Evals &amp; CI gate" tier={selfHosted ? "Community" : "Scale"}>
+          <Section id="concepts-evals" title="Evals &amp; CI gate" tier="Community">
             <p>Evals test your agent on a fixed dataset. The CI release gate fails a build if a new model or prompt causes a regression against your golden tests.</p>
             <Screen src="/evals.png" label="Evals — run your agent against a dataset" />
             <div className="docs-steps">
@@ -484,7 +484,7 @@ import { generateText, stepCountIs } from "ai";
 const dbg = withDebugger(model, {
   runName: "customer-support",
   apiKey: process.env.RUNBACK_API_KEY,
-  redact: "standard",      // "none" | "standard" | "strict"
+  redact: "standard",      // false | "standard" | "strict"
   tags: { env: "prod" },
 });
 
@@ -652,9 +652,8 @@ OpenAIAgentsInstrumentor().instrument(tracer_provider=provider)
             <Table
               headers={["Variable", "Required", "Description"]}
               rows={[
-                ["RUNBACK_API_KEY", "Yes", "Your API key. Prefix rb_live_ for production, rb_test_ for test."],
+                ["RUNBACK_API_KEY", "Yes", "Your API key. All keys are prefixed rb_live_."],
                 ["RUNBACK_INGEST_URL", "Yes*", "Where the SDK sends events — e.g. https://runback.dev (hosted) or your own origin (self-hosted). Defaults to http://localhost:3000, so *effectively required outside local dev — without it, events silently go nowhere."],
-                ["RUNBACK_DISABLED", "No", "Set to 1 to disable all capture (useful in local dev or unit tests)."],
                 ["RUNBACK_DEMO_MODE", "No", "Set to 1 to disable real model calls in replay/evals — used by this site's own public demo, and available on any deployment."],
               ]}
             />
@@ -856,10 +855,9 @@ npx @runback/verify audit.json`}</Code>
 
           <Section id="self-docker" title="Docker Compose" tier="Community">
             <p>The fastest self-host path. Spins up the app and a local Postgres in two commands.</p>
-            <Code lang="bash">{`# 1. Clone the repo. It is private during the current beta — request access at
-#    https://runback.dev/get-started and we'll send a GitHub invite.
-git clone https://github.com/letsRunback/runback.git
-cd runback
+            <Code lang="bash">{`# 1. Clone the Community edition. Public, source-available, no request needed.
+git clone https://github.com/letsRunback/runback-community.git
+cd runback-community
 
 # 2. Copy and fill in the env file (set AUDIT_SIGNING_KEY and JWT_SECRET at minimum)
 cp .env.example .env && $EDITOR .env
@@ -910,7 +908,7 @@ docker compose up -d
             <p>All API requests require a Bearer token in the <code>Authorization</code> header.</p>
             <Code lang="bash">{`curl -H "Authorization: Bearer rb_live_your_key" \\
   https://runback.dev/api/runs`}</Code>
-            <p>API keys are created in your dashboard under <strong>Settings → API Key (SDK)</strong>. Keys are prefixed <code>rb_live_</code> for production and <code>rb_test_</code> for test.</p>
+            <p>API keys are created in your dashboard under <strong>Settings → API Key (SDK)</strong>. Keys are prefixed <code>rb_live_</code>.</p>
 
             {/* "How do I rotate a key" is the first question in every security
                 review, and the string "rotat" did not appear anywhere in these
@@ -932,10 +930,14 @@ docker compose up -d
               next request, and an ingest gap is cheaper than an open credential.
             </Note>
             <p>
-              Ingest keys are scoped to writing runs. They cannot read run content, open a
-              dashboard session, or change settings — so a leaked ingest key cannot exfiltrate
-              your traces. Compliance-read (<code>rb_comp_</code>) and SCIM (<code>rb_scim_</code>)
-              keys are separate scopes and rotate the same way.
+              Two scopes, chosen when you create the key. A <strong>telemetry-only</strong>
+              key (the recommended option) can post runs and nothing else — it cannot read run
+              content, so a leak cannot exfiltrate your traces. A <strong>full-access</strong>
+              key drives the Bearer flows documented below — the CI gate, replay, and the read
+              endpoints — and therefore CAN read run content, so treat it like a password and
+              prefer telemetry-only wherever those flows are not needed. Compliance-read
+              (<code>rb_comp_</code>) and SCIM (<code>rb_scim_</code>) keys are separate scopes
+              and rotate the same way.
             </p>
           </Section>
 

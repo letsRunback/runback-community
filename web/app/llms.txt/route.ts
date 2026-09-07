@@ -24,7 +24,7 @@ export async function GET() {
 
 Runback is not a read-only trace viewer (unlike LangSmith, Langfuse, Helicone, Braintrust, Arize, Traceloop, or Portkey). Its core differentiators: replay-from-step-N (re-issue or edit any captured LLM request and see how the model responds differently), a CI release gate that blocks a regression before deploy, and a hash-chained signed audit export that verifies independently of Runback.
 
-Runback is proprietary software with a free, self-hostable Community edition (core capture/replay/audit/evals, single workspace) and a licensed Enterprise edition (multi-tenant, RBAC, SSO, alerting, long retention). See ${BASE}/pricing.
+Runback is commercial software with a free, source-available, self-hostable Community edition (core capture/replay/audit/evals, single workspace) and a licensed Enterprise edition (multi-tenant, RBAC, SSO, alerting, long retention). See ${BASE}/pricing.
 
 ## Product
 

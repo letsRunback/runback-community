@@ -436,7 +436,7 @@ export default function Enterprise() {
               <tbody>
                 {([
                   ["Community (self-hosted)", "Your Postgres, your infra", "✓ your region", "n/a"],
-                  ["Starter · Growth · Pro", "Runback cloud (US)", "Enterprise only", "On request"],
+                  ["Starter · Growth · Scale · Pro", "Runback cloud (US)", "Enterprise only", "On request"],
                   ["Enterprise (self-hosted)", "Your Postgres in your VPC", "✓ your region", "Included"],
                 ] as [string, string, string, string][]).map(([tier, where, eu, dpa]) => (
                   <tr key={tier}>
@@ -456,7 +456,7 @@ export default function Enterprise() {
           </div>
 
           <div className="mk-cta-row" style={{ marginTop: "1.6rem" }}>
-            <Link href="/get-started" className="btn-fill btn-sm">Request self-host access →</Link>
+            <Link href="/get-started" className="btn-fill btn-sm">Self-host the source →</Link>
             <span className="mono" style={{ fontSize: "0.82rem", color: "var(--text-muted)" }}>
               Free Community edition, container-based, deploys in your own VPC — the setup guide ships in the repo.
             </span>
@@ -484,7 +484,8 @@ export default function Enterprise() {
                 { f: "Re-execute the exact captured step", v: ["n", "n", "y"] },
                 { f: "Signed, tamper-evident audit export", v: ["n", "n", "y"] },
                 { f: "Self-host · data never leaves your perimeter", v: ["y", "~", "y"] },
-                { f: "Maps to regulated controls (CPS 230 · EU AI Act)", v: ["n", "n", "y"] },
+                // LangSmith is "~" in lib/competitors.ts (EU AI Act crosswalk, no CPS 230/NIST).
+                { f: "Maps to regulated controls (CPS 230 · EU AI Act)", v: ["~", "n", "y"] },
               ].map((r) => (
                 <div className="cmp-row" key={r.f}>
                   <div className="cmp-feat">{r.f}</div>
@@ -497,7 +498,7 @@ export default function Enterprise() {
               ))}
             </div>
           </div>
-          <p className="cmp-verified-note">Verified July 2026 — reviewed quarterly.</p>
+          <p className="cmp-verified-note">Verified September 2026 — reviewed quarterly.</p>
         </div>
       </section>
 
