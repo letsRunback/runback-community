@@ -152,6 +152,16 @@ export default function Terms() {
             aggregate liability is limited to the fees you paid for the service in the
             twelve months before the claim.
           </p>
+          <p>
+            This cap governs our <strong>service</strong> — the managed cloud and this
+            website. Your licence to the <strong>software</strong> is a separate
+            relationship with its own cap: the Runback Community Licence limits
+            liability under that licence to AUD&nbsp;100, and the Runback Commercial
+            Licence carries its own terms. Self-hosting only, and no cap here applies to
+            you, because you are not using the service. Both documents are stated
+            separately rather than merged because they cover different things, and the
+            two figures previously read as though they contradicted each other.
+          </p>
 
           <h2>10. Indemnity</h2>
           <p>

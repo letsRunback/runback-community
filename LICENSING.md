@@ -48,8 +48,22 @@ management, and more) that aren't mentioned in either. `web/lib/entitlements.ts`
 `PLAN_FEATURES` is the actual source of truth for what's free vs. licensed —
 don't assume an unlisted feature is Community just because it's absent here.
 
-- `packages/` — `schema`, `redact`, `gateway`, and the base `replay` (`cassette`
-  basics, `digest`, `audit`), and the `sdk` capture/middleware/collector.
+- `packages/` — **MIT, not the Community Licence**: `sdk`, `verify`,
+  `verify-action`, `sdk-python`. Each declares `"license": "MIT"` in its
+  manifest and `@runback/verify` and `@runback/sdk` are published to npm under
+  it, so the grant is already made and cannot be narrowed for copies already
+  distributed. /security and /verify state publicly that the verifier is MIT.
+  As of 2026-09-07 each ships a LICENSE file — MIT requires the notice to
+  travel with copies, and publishing MIT packages without it did not satisfy
+  the licence they declare. Permissive client libraries are also the norm
+  (Stripe, Datadog, Segment); the commercial boundary is the server, not the
+  capture client.
+
+  This entry previously listed the `sdk` under the Community Licence, which
+  contradicted its own manifest and the public claim.
+
+- `packages/` under the **Community Licence** — `schema`, `redact`, `gateway`,
+  and the base `replay` (`cassette` basics, `digest`, `audit`).
 - `web/lib/` — `runs`, `audit`, `ingest`, `replay/runStep`, `replay/simulate`,
   `eval/*`, redaction.
 - `web/app/` — ingest/read APIs, the run debugger (`/runs`, `/app/runs`), evals &

@@ -1,0 +1,93 @@
+ARCHIVED — superseded by LICENSE-COMMUNITY (Version 2.0) on 2026-09-06.
+
+Preserved because LICENSE-COMMUNITY §13(b) provides that this version continues
+to govern any deployment licensed under it until that deployment is obtained
+under v2.0. A clause reserving terms nobody can read is worse than either
+keeping or dropping them, so the text is kept here verbatim.
+
+For completeness: no deployment is believed to be governed by this version. The
+repository was private until 2026-09-05 and the Community edition was not
+distributed under v1.0. If you hold a deployment you believe is licensed under
+v1.0, contact hello@runback.dev.
+
+The text below is unmodified.
+
+────────────────────────────────────────────────────────────────────────────────
+
+Runback Community License
+Version 1.0
+Copyright 2026 Runback. All rights reserved.
+
+This license governs the "Community Edition" of Runback — the edition you may run
+free of charge. THIS IS NOT AN OPEN-SOURCE LICENSE. The Enterprise Features are
+licensed separately under the Runback Commercial License (see LICENSE-ENTERPRISE);
+LICENSING.md maps which functionality belongs to which edition.
+
+1. Definitions
+   "Software" means the Runback Community Edition in executable / object form,
+   including the container images and the files required to run it, that Runback
+   makes available to you.
+   "You" means the individual or entity exercising rights under this license.
+
+2. Grant
+   Subject to your continued compliance with this license, Runback grants you a
+   worldwide, royalty-free, non-exclusive, non-transferable, non-sublicensable
+   license to install, run, and use the Software for your own internal business or
+   personal purposes, on infrastructure you operate ("self-host"), at no charge and
+   without a license token.
+
+3. Restrictions
+   You may NOT, and may not permit or enable any third party to:
+   (a) copy the Software, except as strictly necessary to install and run it for the
+       use permitted in Section 2;
+   (b) distribute, publish, host for others, sublicense, sell, rent, lease, lend, or
+       otherwise make the Software (in whole or in part) available to any third party;
+   (c) modify, adapt, translate, or create derivative works of the Software;
+   (d) reverse engineer, decompile, disassemble, or otherwise attempt to derive or
+       reconstruct the source code, algorithms, data structures, or internal design
+       of the Software, except, and only to the extent, this prohibition is not
+       permitted by applicable law;
+   (e) use the Software, or any idea or know-how derived from it, to build, train,
+       market, or operate a product or service that competes with Runback, or to
+       provide the Software to third parties as a hosted, managed, or time-shared
+       service; or
+   (f) remove, obscure, or alter any copyright, trademark, or other proprietary
+       notice in or on the Software.
+
+4. No source license
+   The source code of the Software is Runback's confidential and proprietary
+   property and is NOT licensed to you under this license. Any incidental access to
+   source (including any contained within a distributed image) grants you no rights
+   to copy, use, or disclose it.
+
+5. Ownership
+   The Software is licensed, not sold. Runback and its licensors retain all right,
+   title, and interest in and to the Software and all intellectual property rights
+   therein. All rights not expressly granted in this license are reserved.
+
+6. Enterprise Features
+   Functionality gated by Runback's entitlement system and unlocked only by a
+   signed RUNBACK_LICENSE token is licensed solely under the Runback Commercial
+   License, not this license. Circumventing that gating is prohibited.
+
+7. Term and termination
+   This license is effective until terminated. It terminates automatically and
+   immediately if you breach any of its terms. On termination you must cease all
+   use of the Software and delete all copies in your possession or control.
+   Sections 3, 4, 5, 8, and 9 survive termination.
+
+8. No warranty
+   THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY
+   KIND, WHETHER EXPRESS, IMPLIED, OR STATUTORY, INCLUDING WITHOUT LIMITATION THE
+   IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+   TITLE, AND NON-INFRINGEMENT.
+
+9. Limitation of liability
+   TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, RUNBACK AND ITS LICENSORS
+   WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR
+   PUNITIVE DAMAGES, OR FOR ANY LOSS OF PROFITS, REVENUE, DATA, OR GOODWILL,
+   ARISING OUT OF OR RELATED TO THIS LICENSE OR THE SOFTWARE, WHETHER IN CONTRACT,
+   TORT, OR OTHERWISE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+For redistribution rights, OEM terms, or any use not permitted above, contact
+Runback: https://runback.dev/contact

@@ -141,6 +141,13 @@ token regardless of whether you can read the code.
    Because the Software is supplied free of charge under this licence, the
    Licensor's aggregate liability under it is limited to AUD $100.
 
+   This cap governs THIS LICENCE — your right to use the software. If you also
+   use Runback's managed cloud service, that is a separate relationship under
+   the Terms of Service, which carries its own limit. The two figures differ
+   because they cover different things, not because either supersedes the
+   other; Section 13(a) governs precedence where an agreement genuinely
+   conflicts.
+
    Nothing in this licence excludes, restricts or modifies any guarantee, right
    or remedy that cannot lawfully be excluded, restricted or modified, including
    under the Australian Consumer Law. Where liability for a failure to comply
@@ -160,6 +167,8 @@ token regardless of whether you can read the code.
    (b) Versions. Version 1.0 continues to govern any deployment licensed under
        it until you obtain the Software under this version. Obtaining the
        Software under this version constitutes acceptance of it for that copy.
+       Version 1.0 is preserved verbatim in LICENSE-COMMUNITY-v1.0.txt, so
+       terms this clause reserves can actually be read.
    (c) Severability. If a provision is held unenforceable, it is modified to the
        minimum extent necessary to make it enforceable, or severed, and the rest
        remains in effect.
