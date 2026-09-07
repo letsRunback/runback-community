@@ -1,0 +1,383 @@
+# Run Runback entirely on your own infrastructure — one command, self-contained.
+#
+#   docker compose up
+#
+# Bundles a Supabase-compatible data layer so nothing external is required:
+#   db    — Postgres, with the schema auto-migrated on first boot
+#   rest  — PostgREST (the API the app's Supabase client talks to)
+#   proxy — Caddy, maps /rest/v1/* → PostgREST so the client URL just works
+#   web   — the Runback app on http://localhost:3000
+#
+# ── REQUIRED before production use ──────────────────────────────────────────────
+# Copy .env.example to .env and set ALL values before running:
+#
+#   cp .env.example .env && $EDITOR .env && docker compose up
+#
+# The JWTs below are LOCAL-DEV DEFAULTS only. They are signed with a known-public
+# secret and MUST be regenerated before any deployment.
+# Generate fresh keys: openssl rand -hex 32
+# ────────────────────────────────────────────────────────────────────────────────
+x-jwt-secret: &jwt_secret "${JWT_SECRET:?JWT_SECRET must be set in .env — run: openssl rand -hex 32}"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: postgres
+      AUTHENTICATOR_PASSWORD: "${AUTHENTICATOR_PASSWORD:?AUTHENTICATOR_PASSWORD must be set in .env — run: openssl rand -hex 32}"
+    volumes:
+      - ./selfhost/init/00-roles.sql:/docker-entrypoint-initdb.d/00-roles.sql:ro
+      - ./selfhost/init/05-set-authenticator-password.sh:/docker-entrypoint-initdb.d/05-set-authenticator-password.sh:ro
+      - ./sql/create_api_keys.sql:/docker-entrypoint-initdb.d/10-api_keys.sql:ro
+      - ./sql/create_runs.sql:/docker-entrypoint-initdb.d/11-runs.sql:ro
+      - ./sql/create_events.sql:/docker-entrypoint-initdb.d/12-events.sql:ro
+      - ./sql/create_eval.sql:/docker-entrypoint-initdb.d/13-eval.sql:ro
+      - ./sql/create_leads.sql:/docker-entrypoint-initdb.d/14-leads.sql:ro
+      - ./sql/create_tenancy.sql:/docker-entrypoint-initdb.d/15-tenancy.sql:ro
+      - ./sql/create_alerts.sql:/docker-entrypoint-initdb.d/16-alerts.sql:ro
+      - ./sql/create_usage.sql:/docker-entrypoint-initdb.d/17-usage.sql:ro
+      - ./sql/create_trial.sql:/docker-entrypoint-initdb.d/18-trial.sql:ro
+      - ./sql/create_billing.sql:/docker-entrypoint-initdb.d/19-billing.sql:ro
+      - ./sql/create_sso.sql:/docker-entrypoint-initdb.d/20-sso.sql:ro
+      - ./sql/create_eval_tenancy.sql:/docker-entrypoint-initdb.d/21-eval-tenancy.sql:ro
+      - ./sql/create_run_digest.sql:/docker-entrypoint-initdb.d/22-run-digest.sql:ro
+      - ./sql/create_ledger.sql:/docker-entrypoint-initdb.d/23-ledger.sql:ro
+      - ./sql/create_rollups.sql:/docker-entrypoint-initdb.d/24-rollups.sql:ro
+      - ./sql/create_policies.sql:/docker-entrypoint-initdb.d/25-policies.sql:ro
+      - ./sql/create_golden.sql:/docker-entrypoint-initdb.d/26-golden.sql:ro
+      - ./sql/create_model_keys.sql:/docker-entrypoint-initdb.d/27-model_keys.sql:ro
+      - ./sql/create_rate_limits.sql:/docker-entrypoint-initdb.d/28-rate_limits.sql:ro
+      - ./sql/create_starter.sql:/docker-entrypoint-initdb.d/29-starter.sql:ro
+      - ./sql/create_moats.sql:/docker-entrypoint-initdb.d/30-moats.sql:ro
+      - ./sql/create_fleet_stats.sql:/docker-entrypoint-initdb.d/31-fleet_stats.sql:ro
+      - ./sql/create_drift.sql:/docker-entrypoint-initdb.d/32-drift.sql:ro
+      - ./sql/create_approvals.sql:/docker-entrypoint-initdb.d/33-approvals.sql:ro
+      - ./sql/create_chargeback.sql:/docker-entrypoint-initdb.d/34-chargeback.sql:ro
+      - ./sql/create_compliance.sql:/docker-entrypoint-initdb.d/35-compliance.sql:ro
+      - ./sql/create_incidents.sql:/docker-entrypoint-initdb.d/36-incidents.sql:ro
+      # newsletter must run BEFORE marketing_signals — the latter ALTERs
+      # newsletter_subscribers, which only exists once this one has run.
+      - ./sql/create_newsletter.sql:/docker-entrypoint-initdb.d/37-newsletter.sql:ro
+      - ./sql/create_marketing_signals.sql:/docker-entrypoint-initdb.d/38-marketing_signals.sql:ro
+      - ./sql/create_plg_events.sql:/docker-entrypoint-initdb.d/39-plg_events.sql:ro
+      - ./sql/create_policy_causes.sql:/docker-entrypoint-initdb.d/40-policy_causes.sql:ro
+      - ./sql/create_trust_attestations.sql:/docker-entrypoint-initdb.d/41-trust_attestations.sql:ro
+      - ./sql/add_corpus_opt_in.sql:/docker-entrypoint-initdb.d/42-add_corpus_opt_in.sql:ro
+      - ./sql/add_golden_dataset.sql:/docker-entrypoint-initdb.d/43-add_golden_dataset.sql:ro
+      - ./sql/add_parent_run.sql:/docker-entrypoint-initdb.d/44-add_parent_run.sql:ro
+      - ./sql/add_vertical.sql:/docker-entrypoint-initdb.d/45-add_vertical.sql:ro
+      - ./sql/update_corpus_opt_in_default.sql:/docker-entrypoint-initdb.d/46-update_corpus_opt_in_default.sql:ro
+      - ./sql/add_auth_token_link_id.sql:/docker-entrypoint-initdb.d/47-add_auth_token_link_id.sql:ro
+      - ./sql/add_plg_unsubscribed.sql:/docker-entrypoint-initdb.d/48-add_plg_unsubscribed.sql:ro
+      - ./sql/add_api_key_expiry.sql:/docker-entrypoint-initdb.d/49-add_api_key_expiry.sql:ro
+      - ./sql/add_api_key_scope.sql:/docker-entrypoint-initdb.d/50-add_api_key_scope.sql:ro
+      - ./sql/create_ci_determinism_runs.sql:/docker-entrypoint-initdb.d/51-create_ci_determinism_runs.sql:ro
+      - ./sql/add_growth_scale_plans.sql:/docker-entrypoint-initdb.d/52-add_growth_scale_plans.sql:ro
+      - ./sql/add_subscription_status.sql:/docker-entrypoint-initdb.d/53-add_subscription_status.sql:ro
+      - ./sql/add_redaction_count.sql:/docker-entrypoint-initdb.d/54-add_redaction_count.sql:ro
+      - ./sql/create_ledger_tombstones.sql:/docker-entrypoint-initdb.d/55-create_ledger_tombstones.sql:ro
+      - ./sql/add_model_diff_method.sql:/docker-entrypoint-initdb.d/56-add_model_diff_method.sql:ro
+      - ./sql/add_gate_thresholds.sql:/docker-entrypoint-initdb.d/57-add_gate_thresholds.sql:ro
+      - ./sql/add_gate_report_fields.sql:/docker-entrypoint-initdb.d/58-add_gate_report_fields.sql:ro
+      - ./sql/create_onboarding_overrides.sql:/docker-entrypoint-initdb.d/59-create_onboarding_overrides.sql:ro
+      - ./sql/add_policy_evaluation_columns.sql:/docker-entrypoint-initdb.d/60-add_policy_evaluation_columns.sql:ro
+      - ./sql/add_redaction_by_type.sql:/docker-entrypoint-initdb.d/61-add_redaction_by_type.sql:ro
+      - ./sql/add_event_actor.sql:/docker-entrypoint-initdb.d/62-add_event_actor.sql:ro
+      - ./sql/add_newsletter_segment.sql:/docker-entrypoint-initdb.d/63-add_newsletter_segment.sql:ro
+      # Was missing from this list entirely. Without it the gating_* columns never
+      # exist on a self-host, so /api/evals/:id/gate answers 404 forever and the
+      # release gate — a headline feature — is silently unavailable.
+      - ./sql/add_adversarial_provenance.sql:/docker-entrypoint-initdb.d/64-add_adversarial_provenance.sql:ro
+      # Ten more that had drifted out of this list while the code that queries
+      # them shipped. On a self-host every one of these tables was simply absent,
+      # so the features failed at runtime rather than at install.
+      #
+      # scope_run_id_per_org is the one that matters most: it makes tenancy a
+      # composite (org_id, run_id) key enforced by the database. Its own header
+      # says it exists because "one missed filter was a cross-tenant read rather
+      # than an empty result" — and it was missing from every self-hosted
+      # deployment, leaving application-layer filtering as the only boundary.
+      - ./sql/scope_run_id_per_org.sql:/docker-entrypoint-initdb.d/65-scope_run_id_per_org.sql:ro
+      - ./sql/create_compliance_summary.sql:/docker-entrypoint-initdb.d/66-compliance_summary.sql:ro
+      - ./sql/create_cost_summary.sql:/docker-entrypoint-initdb.d/67-cost_summary.sql:ro
+      - ./sql/create_admin_audit.sql:/docker-entrypoint-initdb.d/68-admin_audit.sql:ro
+      - ./sql/create_legal_holds.sql:/docker-entrypoint-initdb.d/69-legal_holds.sql:ro
+      - ./sql/create_siem_sinks.sql:/docker-entrypoint-initdb.d/70-siem_sinks.sql:ro
+      - ./sql/create_error_events.sql:/docker-entrypoint-initdb.d/71-error_events.sql:ro
+      - ./sql/create_agent_registry.sql:/docker-entrypoint-initdb.d/72-agent_registry.sql:ro
+      - ./sql/create_workflow_sinks.sql:/docker-entrypoint-initdb.d/73-workflow_sinks.sql:ro
+      - ./sql/create_uptime_checks.sql:/docker-entrypoint-initdb.d/74-uptime_checks.sql:ro
+      # RLS on every table. Last of the sql/ mounts so it runs after every
+      # CREATE TABLE above it.
+      - ./sql/enable_rls_everywhere.sql:/docker-entrypoint-initdb.d/75-enable_rls_everywhere.sql:ro
+      - ./sql/revoke_anon_everywhere.sql:/docker-entrypoint-initdb.d/76-revoke_anon_everywhere.sql:ro
+      - ./sql/create_tenant_role.sql:/docker-entrypoint-initdb.d/77-create_tenant_role.sql:ro
+      - ./sql/create_ledger_witnesses.sql:/docker-entrypoint-initdb.d/78-create_ledger_witnesses.sql:ro
+      - ./sql/create_transparency_log.sql:/docker-entrypoint-initdb.d/79-create_transparency_log.sql:ro
+      - ./sql/add_checkpoint_tombstone_digest.sql:/docker-entrypoint-initdb.d/80-add_checkpoint_tombstone_digest.sql:ro
+      - ./sql/create_pairwise.sql:/docker-entrypoint-initdb.d/81-pairwise.sql:ro
+      - ./sql/create_judge_calibration.sql:/docker-entrypoint-initdb.d/82-judge_calibration.sql:ro
+      - ./sql/create_prompts.sql:/docker-entrypoint-initdb.d/83-prompts.sql:ro
+      - ./sql/add_golden_history.sql:/docker-entrypoint-initdb.d/84-golden_history.sql:ro
+      - ./sql/add_golden_tool_name.sql:/docker-entrypoint-initdb.d/85-golden_tool_name.sql:ro
+      - ./sql/fix_policy_template_shape.sql:/docker-entrypoint-initdb.d/86-fix_policy_template_shape.sql:ro
+      - ./sql/repair_broken_imported_policies.sql:/docker-entrypoint-initdb.d/87-repair_broken_imported_policies.sql:ro
+      - ./sql/add_trust_attestation_signature.sql:/docker-entrypoint-initdb.d/88-add_trust_attestation_signature.sql:ro
+      - ./sql/add_agent_coverage_critical_threshold.sql:/docker-entrypoint-initdb.d/89-add_agent_coverage_critical_threshold.sql:ro
+      - ./sql/add_workflow_sink_shadow_agent.sql:/docker-entrypoint-initdb.d/91-add_workflow_sink_shadow_agent.sql:ro
+      - ./sql/fix_agent_coverage_overload.sql:/docker-entrypoint-initdb.d/92-fix_agent_coverage_overload.sql:ro
+      - ./sql/add_workflow_sink_sdk_bypass.sql:/docker-entrypoint-initdb.d/93-add_workflow_sink_sdk_bypass.sql:ro
+      - ./sql/add_alert_delivery_status.sql:/docker-entrypoint-initdb.d/94-add_alert_delivery_status.sql:ro
+      - ./sql/add_bump_usage_capped.sql:/docker-entrypoint-initdb.d/95-add_bump_usage_capped.sql:ro
+      - ./sql/add_trust_scope_violations.sql:/docker-entrypoint-initdb.d/96-add_trust_scope_violations.sql:ro
+      - ./sql/create_agent_authorization_state.sql:/docker-entrypoint-initdb.d/97-create_agent_authorization_state.sql:ro
+      - ./sql/fix_bump_usage_capped_ambiguous_column.sql:/docker-entrypoint-initdb.d/98-fix_bump_usage_capped_ambiguous_column.sql:ro
+      # 99a/99b, not 100+: docker-entrypoint-initdb.d sorts mount destination
+      # filenames LEXICOGRAPHICALLY, not numerically — "100-..." would sort
+      # before "75-enable_rls_everywhere.sql"/"77-create_tenant_role.sql"
+      # ('1' < '7'), running add_narratives_rls.sql before the `tenant` role
+      # and current_org_id() it depends on even exist. 99a/99b sorts after
+      # 98- and in the correct a-before-b order relative to each other.
+      - ./sql/create_narratives.sql:/docker-entrypoint-initdb.d/99a-create_narratives.sql:ro
+      - ./sql/add_narratives_rls.sql:/docker-entrypoint-initdb.d/99b-add_narratives_rls.sql:ro
+      - ./sql/create_corpus_mined_signals.sql:/docker-entrypoint-initdb.d/99c-create_corpus_mined_signals.sql:ro
+      - ./sql/create_security_findings.sql:/docker-entrypoint-initdb.d/99d-create_security_findings.sql:ro
+      - ./sql/create_external_grants.sql:/docker-entrypoint-initdb.d/99e-create_external_grants.sql:ro
+      - ./sql/add_judge_model.sql:/docker-entrypoint-initdb.d/99f-add_judge_model.sql:ro
+      - ./sql/add_pairwise_self_preference_flag.sql:/docker-entrypoint-initdb.d/99g-add_pairwise_self_preference_flag.sql:ro
+      - ./sql/add_session_revocation.sql:/docker-entrypoint-initdb.d/99h-add_session_revocation.sql:ro
+      - ./sql/create_admin_checkpoints.sql:/docker-entrypoint-initdb.d/99i-create_admin_checkpoints.sql:ro
+      - ./sql/create_admin_witnesses.sql:/docker-entrypoint-initdb.d/99j-create_admin_witnesses.sql:ro
+      - ./selfhost/init/90-grants.sql:/docker-entrypoint-initdb.d/90-grants.sql:ro
+      - rbdata:/var/lib/postgresql/data
+    healthcheck:
+      # passes only once ALL migrations have run — probes migration 49 (last one)
+      test: ["CMD-SHELL", "pg_isready -U postgres && psql -U postgres -d postgres -c 'select expires_at from api_keys limit 0' >/dev/null 2>&1"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+    networks:
+      - backend
+
+  rest:
+    image: postgrest/postgrest:v12.2.3
+    environment:
+      PGRST_DB_URI: "postgres://authenticator:${AUTHENTICATOR_PASSWORD:?AUTHENTICATOR_PASSWORD must be set in .env}@db:5432/postgres"
+      PGRST_DB_SCHEMAS: "public"
+      PGRST_DB_ANON_ROLE: "anon"
+      PGRST_JWT_SECRET: *jwt_secret
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - backend
+      # NOT on frontend — web must go through proxy (Caddy) only.
+      # This prevents the web container from bypassing Caddy's auth middleware
+      # by calling rest:3000 directly.
+
+  proxy:
+    image: caddy:2-alpine
+    volumes:
+      - ./selfhost/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - rest
+    restart: unless-stopped
+    networks:
+      - backend   # reach rest:3000
+      - frontend  # be reached by web at proxy:8000
+
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: "http://proxy:8000"
+      # JWTs must be signed with JWT_SECRET. Generate both tokens after setting JWT_SECRET:
+      #   JWT_SECRET=<your secret> \
+      #   node -e 'const c=require("node:crypto"),b=o=>Buffer.from(JSON.stringify(o)).toString("base64url"),s=process.env.JWT_SECRET,h=b({alg:"HS256",typ:"JWT"});["anon","service_role"].forEach(r=>{const p=b({role:r,iss:"runback-selfhost",iat:(Date.now()/1e3|0),exp:(Date.now()/1e3|0)+3153600000});console.log(r+": "+h+"."+p+"."+c.createHmac("sha256",s).update(h+"."+p).digest("base64url"))})'
+      # Then set SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY in your .env file.
+      # Not required: no code reads this. PostgREST authenticates with
+      # PGRST_JWT_SECRET and serves unauthenticated requests as PGRST_DB_ANON_ROLE,
+      # and the app only ever uses the service-role key (lib/supabase/admin.ts).
+      # It was a hard `:?` requirement, so every self-hoster had to mint a JWT
+      # that nothing consumed. Optional now; set it only if you add a browser client.
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: "${SUPABASE_ANON_KEY:-}"
+      SUPABASE_SERVICE_ROLE_KEY: "${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY must be set — see .env.example for generation instructions}"
+      # Activates lib/supabase/tenant.ts's database-enforced tenant isolation
+      # (RLS via the `tenant` role in sql/create_tenant_role.sql), a
+      # defense-in-depth layer under the app-level org_id filtering. That
+      # module mints its own short-lived per-org JWTs and signs them with
+      # SUPABASE_JWT_SECRET — PostgREST validates every token against
+      # PGRST_JWT_SECRET above, which is JWT_SECRET, so this must be the same
+      # value or the tenant role's tokens fail verification. Reusing the
+      # &jwt_secret anchor keeps the two in sync automatically; nothing new to
+      # generate. Without this, every request silently falls back to the
+      # service-role client — see tenant.ts's startup warning.
+      SUPABASE_JWT_SECRET: *jwt_secret
+      # REQUIRED: set AUDIT_SIGNING_KEY in .env — must not be left as default.
+      # Generate: openssl rand -hex 32
+      # Leaving this unset or at the default makes all audit records insecure.
+      AUDIT_SIGNING_KEY: "${AUDIT_SIGNING_KEY:?AUDIT_SIGNING_KEY must be set in .env — run: openssl rand -hex 32}"
+      # Set this to the OUTGOING key when rotating AUDIT_SIGNING_KEY — see
+      # .env.example item 1a. Without it, checkpoints sealed under the old key
+      # report as TAMPERED after rotation even though nothing was tampered with.
+      AUDIT_SIGNING_KEY_PREVIOUS: ${AUDIT_SIGNING_KEY_PREVIOUS:-}
+      # Node environment — production mode enforces encryption key requirements.
+      NODE_ENV: production
+      # Ed25519 key pair for asymmetric audit-ledger signing (true non-repudiation).
+      # Without this, the audit ledger falls back to HMAC-SHA256 (AUDIT_SIGNING_KEY).
+      # Generate: openssl genpkey -algorithm ed25519 -outform PEM > audit_private.pem
+      #           openssl pkey -in audit_private.pem -pubout > audit_public.pem
+      # Then: AUDIT_ED25519_PRIVATE_KEY="$(cat audit_private.pem)"
+      AUDIT_ED25519_PRIVATE_KEY: ${AUDIT_ED25519_PRIVATE_KEY:-}
+      # Set only if the private key lives elsewhere (e.g. an HSM) — otherwise
+      # the public key is derived from AUDIT_ED25519_PRIVATE_KEY above.
+      AUDIT_ED25519_PUBLIC_KEY: ${AUDIT_ED25519_PUBLIC_KEY:-}
+      # Rotation pair for the Ed25519 keys above — same reasoning as
+      # AUDIT_SIGNING_KEY_PREVIOUS: without these, rotating the Ed25519 key
+      # makes every checkpoint sealed under the old key report as TAMPERED.
+      # Were read by lib/witness.ts/lib/signing.ts but never actually passed
+      # through this compose file, so a self-hoster who set them in .env saw
+      # no effect — same bug class as RUNBACK_SHOWCASE below.
+      AUDIT_ED25519_PRIVATE_KEY_PREVIOUS: ${AUDIT_ED25519_PRIVATE_KEY_PREVIOUS:-}
+      AUDIT_ED25519_PUBLIC_KEY_PREVIOUS: ${AUDIT_ED25519_PUBLIC_KEY_PREVIOUS:-}
+      # Internal RFC 3161 timestamp authority for a genuinely air-gapped
+      # deployment — see docs/SELF_HOSTING.md's "Privacy posture" section.
+      # Unset uses the two public default TSAs (freetsa.org, digicert), which
+      # reach the open internet on every ledger checkpoint seal. Documented as
+      # the air-gap escape hatch, but — like RUNBACK_SHOWCASE below — was never
+      # actually passed through this file, so setting it in .env did nothing.
+      RUNBACK_TSA_URLS: ${RUNBACK_TSA_URLS:-}
+      # SSO client-secret encryption key — REQUIRED if any org configures OIDC SSO.
+      # Without it the app will throw when SSO config is saved (production guard).
+      # Generate: openssl rand -hex 32
+      SSO_SECRET_KEY: ${SSO_SECRET_KEY:-}
+      # BYOK model-key encryption — REQUIRED if any org stores API keys in Settings → Model Keys.
+      # Without it the app will throw when a key is saved (production guard).
+      # Generate: openssl rand -hex 32. Must be distinct from AUDIT_SIGNING_KEY.
+      MODEL_KEY_SECRET: ${MODEL_KEY_SECRET:-}
+      # Demo mode — OPTIONAL. RUNBACK_DEMO_MODE=1 turns the whole deployment
+      # into a zero-cost simulated sandbox (this is how the hosted marketing
+      # site runs); RUNBACK_DEMO_EMAILS lets specific accounts on a REAL
+      # deployment always run simulated too (a sales-demo login). Leave both
+      # unset for a real self-hosted instance.
+      RUNBACK_DEMO_MODE: ${RUNBACK_DEMO_MODE:-}
+      RUNBACK_DEMO_EMAILS: ${RUNBACK_DEMO_EMAILS:-}
+      # Public showcase — OPTIONAL. Lets ONE named org's runs render on the
+      # unauthenticated /runs/[run_id] page (see lib/demoMode.ts's
+      # showcaseOrgId()) — defaults to RUNBACK_DEMO_MODE when unset. Was
+      # documented and readable by the app, but never actually passed
+      # through this compose file, so a self-hoster who set it in .env saw
+      # no effect. Leave both unset for a real self-hosted instance.
+      RUNBACK_SHOWCASE: ${RUNBACK_SHOWCASE:-}
+      RUNBACK_SHOWCASE_ORG: ${RUNBACK_SHOWCASE_ORG:-}
+      # Connect your LLMs — OPTIONAL, only for live step-replay & eval judges.
+      # Set these in a .env file next to this compose (cp .env.example .env).
+      # Observing agents + time-travel replay + audit need NONE of them.
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # App public URL — REQUIRED: used for magic-link emails, webhooks, and redirects.
+      NEXT_PUBLIC_APP_URL: "${NEXT_PUBLIC_APP_URL:?NEXT_PUBLIC_APP_URL must be set — e.g. http://localhost:3000 or https://ai.yourcompany.com}"
+      # Resend — REQUIRED for magic-link authentication email delivery.
+      # Optional. lib/email.ts logs and no-ops when unset, so the stack runs
+      # fine without it — you just do not get magic-link or alert email. It was
+      # a hard `:?`, which stopped `docker compose up` for anyone who had not
+      # signed up to Resend yet, including anyone only trying the demo.
+      RESEND_API_KEY: "${RESEND_API_KEY:-}"
+      LEAD_NOTIFY_FROM: ${LEAD_NOTIFY_FROM:-}
+      # PRIVATE — an operator inbox, never shown to a customer. Keep distinct
+      # from SUPPORT_EMAIL below, which is the public address in outbound copy.
+      LEAD_NOTIFY_TO: ${LEAD_NOTIFY_TO:-}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-}
+      # LemonSqueezy billing. Required only if you enable paid plans.
+      LEMONSQUEEZY_API_KEY: ${LEMONSQUEEZY_API_KEY:-}
+      LEMONSQUEEZY_STORE_ID: ${LEMONSQUEEZY_STORE_ID:-}
+      LEMONSQUEEZY_WEBHOOK_SECRET: ${LEMONSQUEEZY_WEBHOOK_SECRET:-}
+      LEMONSQUEEZY_VARIANT_STARTER: ${LEMONSQUEEZY_VARIANT_STARTER:-}
+      LEMONSQUEEZY_VARIANT_GROWTH: ${LEMONSQUEEZY_VARIANT_GROWTH:-}
+      LEMONSQUEEZY_VARIANT_PRO: ${LEMONSQUEEZY_VARIANT_PRO:-}
+      LEMONSQUEEZY_VARIANT_SCALE: ${LEMONSQUEEZY_VARIANT_SCALE:-}
+      # Slack webhooks — PLG signals and general alerts. Optional.
+      SLACK_PLG_WEBHOOK: ${SLACK_PLG_WEBHOOK:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+      # Cron authentication — shared with the `scheduler` service below, which
+      # is what actually calls these routes on a schedule in this stack (the
+      # hosted deployment uses Vercel Cron / web/vercel.json's `crons` array
+      # instead — this compose file is the self-hosted equivalent of that).
+      # Without it, all cron requests return 401. Generate: openssl rand -hex 32
+      CRON_SECRET: "${CRON_SECRET:?CRON_SECRET must be set in .env. Generate: openssl rand -hex 32}"
+      # Unsubscribe HMAC — REQUIRED for signed newsletter/PLG unsubscribe links.
+      # Without this, unsubscribe links fall back to AUDIT_SIGNING_KEY (insecure reuse).
+      # Generate: openssl rand -hex 32
+      # Optional: lib/unsubscribeToken.ts falls back to AUDIT_SIGNING_KEY when
+      # this is unset. Set it to give unsubscribe links their own rotation.
+      UNSUBSCRIBE_SECRET: "${UNSUBSCRIBE_SECRET:-}"
+      # SIEM collector token encryption key — required only if you forward the
+      # admin audit log to Splunk/Sentinel. Generate: openssl rand -hex 32
+      SIEM_SECRET_KEY: ${SIEM_SECRET_KEY:-}
+      # Workflow credential encryption key — required only if you raise findings
+      # in ServiceNow, Jira or PagerDuty. Generate: openssl rand -hex 32
+      WORKFLOW_SECRET_KEY: ${WORKFLOW_SECRET_KEY:-}
+      # Operator alerts — where NEW production faults are sent. Optional; with
+      # neither set, faults are still recorded and queryable, just not pushed.
+      OPS_ALERT_EMAIL: ${OPS_ALERT_EMAIL:-}
+      OPS_ALERT_WEBHOOK: ${OPS_ALERT_WEBHOOK:-}
+      # Buffer — social scheduling for newsletter cron. Optional.
+      BUFFER_ACCESS_TOKEN: ${BUFFER_ACCESS_TOKEN:-}
+      # Enterprise license key. Leave empty for Community (self-host) tier.
+      RUNBACK_LICENSE: ${RUNBACK_LICENSE:-}
+      # Reaching a private/RFC1918 SSO issuer, alert webhook, or SIEM collector
+      # is ALLOWED BY DEFAULT here — RUNBACK_SELF_HOSTED=1 below is enough on
+      # its own, since you own this network. Set this to "false" only if you
+      # specifically want the stricter hosted-style SSRF guard anyway. Ignored
+      # on the hosted service regardless of this value. See lib/deployment.ts.
+      RUNBACK_ALLOW_PRIVATE_TARGETS: ${RUNBACK_ALLOW_PRIVATE_TARGETS:-}
+      # Always "1" here, never set on the hosted SaaS deployment (Vercel) —
+      # this is the only signal middleware.ts has to tell "self-hosted,
+      # unlicensed" apart from "hosted runback.dev", since both otherwise
+      # look identical (no RUNBACK_LICENSE). Do not make this configurable.
+      RUNBACK_SELF_HOSTED: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - frontend
+
+  # Runs the same 18 jobs web/vercel.json's `crons` array schedules on the
+  # hosted deployment (ledger sealing, the `guard` kill-switch, retention,
+  # SIEM export, drift/error alerting, ...) — Docker Compose has no built-in
+  # equivalent to Vercel Cron, so without this service every one of those
+  # jobs simply never ran, silently, on any self-hosted deployment. See
+  # selfhost/cron/crontab.template for the schedule (kept in sync with
+  # vercel.json by inspection — both list the same 18 routes).
+  scheduler:
+    image: alpine:3.20
+    volumes:
+      - ./selfhost/cron/crontab.template:/etc/cron.d/crontab.template:ro
+      - ./selfhost/cron/run-cron.sh:/usr/local/bin/run-cron.sh:ro
+      - ./selfhost/cron/entrypoint.sh:/entrypoint.sh:ro
+    environment:
+      CRON_SECRET: "${CRON_SECRET:?CRON_SECRET must be set in .env. Generate: openssl rand -hex 32}"
+    # curl isn't in the base alpine image; installed once at container start
+    # rather than adding a Dockerfile for one package. entrypoint.sh writes
+    # CRON_SECRET to a root-only file and execs crond in the foreground so
+    # `docker compose logs scheduler` shows every job's result.
+    command: sh -c "apk add --no-cache curl >/dev/null 2>&1 && sh /entrypoint.sh"
+    depends_on:
+      - web
+    restart: unless-stopped
+    networks:
+      - frontend   # reach web:3000; never needs backend (db/rest) directly
+
+volumes:
+  rbdata:
+
+networks:
+  backend:
+  frontend:

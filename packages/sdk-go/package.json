@@ -1,0 +1,6 @@
+{
+  "name": "@runback/sdk-go",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Not an npm package. Exists so npm workspace resolution (root package.json's \"packages/*\" glob) doesn't choke on a directory with no package.json. The real package lives in go.mod / runback/ and is published as a Go module, not to npm."
+}

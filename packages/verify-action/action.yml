@@ -1,0 +1,58 @@
+name: "Runback Verify"
+description: >-
+  Verify the tamper-evidence and signature of Runback audit records
+  (runback.cassette/v1) in CI — the same @runback/verify check anyone can
+  run with no account, wired into a workflow so a broken or unsigned export
+  fails the build instead of being noticed later.
+author: "Runback"
+branding:
+  icon: "shield"
+  color: "green"
+
+inputs:
+  path:
+    description: >-
+      Glob pattern (relative to the workspace) matching one or more
+      cassette/narrative/finding JSON files to verify. Every match is
+      checked independently.
+    required: true
+  key:
+    description: >-
+      HMAC signing key, for legacy HMAC-signed records only. Ed25519-signed
+      records need no key — they carry their own public key and verify fully
+      offline. Pass via a repository secret, never a literal value.
+    required: false
+  version:
+    description: "@runback/verify version to install (npm dist-tag or exact version)."
+    required: false
+    default: "2"
+  fail-on-unverified:
+    description: >-
+      Whether a self-consistent-but-unproven-origin record (exit code 2 —
+      unsigned, or signed by a key that cannot be pinned) fails the step.
+      Set to "false" to only fail on an actual integrity break (exit code 1).
+    required: false
+    default: "true"
+
+outputs:
+  verdict:
+    description: >-
+      The worst verdict across all matched files: "invalid" if any file
+      failed integrity, else "unverified" if any file's origin is unproven,
+      else "valid".
+    value: ${{ steps.run.outputs.verdict }}
+  checked:
+    description: "Number of files matched and verified."
+    value: ${{ steps.run.outputs.checked }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: run
+      shell: bash
+      run: ${{ github.action_path }}/verify.sh
+      env:
+        RB_PATH_GLOB: ${{ inputs.path }}
+        RB_KEY: ${{ inputs.key }}
+        RB_VERSION: ${{ inputs.version }}
+        RB_FAIL_ON_UNVERIFIED: ${{ inputs.fail-on-unverified }}

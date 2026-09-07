@@ -1,0 +1,24 @@
+# Proves the one-command self-host actually works: `docker compose up` brings up
+# the bundled stack (Postgres + PostgREST + proxy + the app) and a smoke test
+# sends a real run through it. This is what keeps the get-started self-host
+# command honest — it's red until the stack genuinely serves a working Runback.
+name: selfhost-proof
+on:
+  push:
+    paths:
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "selfhost/**"
+      - "sql/**"
+      - "web/**"
+      - "packages/**"
+      - ".github/workflows/selfhost-proof.yml"
+  workflow_dispatch:
+
+jobs:
+  compose-up:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: docker compose up + smoke test
+        run: bash selfhost/smoke-test.sh

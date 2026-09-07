@@ -1,0 +1,6 @@
+{
+  "name": "@runback/sdk-python",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Not an npm package. Exists so npm workspace resolution (root package.json's \"packages/*\" glob) doesn't choke on a directory with no package.json. The real package lives in pyproject.toml / runback/ and is published to PyPI, not npm."
+}

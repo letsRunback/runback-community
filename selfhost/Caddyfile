@@ -1,0 +1,20 @@
+# Maps the Supabase client's /rest/v1/* path onto PostgREST (which serves at root).
+# The app's NEXT_PUBLIC_SUPABASE_URL points here (http://proxy:8000).
+{
+	admin off
+	auto_https off
+}
+
+:8000 {
+	# /rest/v1/ad_runs?... → PostgREST /ad_runs?...  (handle_path strips the prefix)
+	handle_path /rest/v1/* {
+		# Strip any client-supplied X-Forwarded-For before forwarding — prevents
+		# XFF spoofing from bypassing IP-based rate limits in the app.
+		# Operators MUST also strip XFF in any public-facing reverse proxy that
+		# sits in front of the web container (port 3000).
+		request_header -X-Forwarded-For
+		reverse_proxy rest:3000
+	}
+	# health / anything else
+	respond /health 200
+}

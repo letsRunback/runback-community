@@ -1,0 +1,19 @@
+-- add_agent_coverage_critical_threshold.sql added a third parameter to
+-- agent_coverage via CREATE OR REPLACE FUNCTION, on the assumption that
+-- would update the existing function in place. Postgres doesn't work that
+-- way: a function's identity includes its parameter list, so a different
+-- parameter list is a DIFFERENT function. CREATE OR REPLACE created a
+-- second overload rather than replacing the first — the original
+-- 2-parameter agent_coverage(uuid, integer) kept existing right alongside
+-- the new 3-parameter one.
+--
+-- Confirmed live against production: calling agent_coverage with fewer than
+-- 3 arguments (relying on defaults, as any "old-style" caller would) is
+-- genuinely ambiguous — Postgres can't choose between the two overloads and
+-- errors: "Could not choose the best candidate function." The application
+-- always calls with all three arguments explicitly (lib/coverage.ts), so
+-- this wasn't hit by real traffic, but it's a landmine for anything that
+-- doesn't — PostgREST's own schema cache, a future caller, direct RPC
+-- exploration — and a stale orphaned overload has no reason to exist
+-- either way. Drop it, leaving exactly one agent_coverage function.
+DROP FUNCTION IF EXISTS agent_coverage(uuid, integer);

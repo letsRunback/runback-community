@@ -1,0 +1,21 @@
+# RCB fast-path proof — runs ONLY on a self-hosted runner with a real hardware
+# PMU (label: pmu). Standard cloud/CI VMs expose no PMU, so the RCB
+# retired-conditional-branch counter — rr's instruction-precise clock — can't be
+# measured there. Attach one PMU-capable box (see linux/register-pmu-runner.sh)
+# and this lights up; until then it simply never runs. The PMU-free correctness
+# proof lives in the main determinism-proof workflow (single-step).
+name: rcb-pmu
+on:
+  workflow_dispatch: # manual only — never auto-queues without a PMU runner attached
+
+jobs:
+  rcb:
+    runs-on: [self-hosted, pmu] # a host with hardware performance counters
+    steps:
+      - uses: actions/checkout@v4
+      - name: RCB hardware clock — deterministic retired-conditional-branch count
+        run: sh linux/rcb_test.sh
+      - name: Instruction-precise preemption (single-step, cross-check)
+        run: sh linux/ss_test.sh
+      - name: RCB-keyed landing — hardware counter wired to the lander
+        run: sh linux/rcb_land_test.sh

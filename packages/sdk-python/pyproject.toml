@@ -1,0 +1,55 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "runback-sdk"
+version = "0.1.0"
+description = "Capture, replay, and audit every AI agent decision — native LangGraph capture, plus a standalone collector/redactor usable from any Python agent framework."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Runback", email = "contact@runback.dev" }]
+requires-python = ">=3.9"
+keywords = [
+  "ai-agents",
+  "llm",
+  "observability",
+  "langgraph",
+  "langchain",
+  "replay",
+  "audit",
+  "governance",
+  "tracing",
+  "compliance",
+  "eu-ai-act",
+  "policy-enforcement",
+  "runback",
+]
+dependencies = [
+  "requests>=2.28",
+  "python-ulid>=2.2",
+]
+
+[project.optional-dependencies]
+langgraph = [
+  "langchain-core>=0.3",
+  "langgraph>=0.2",
+]
+dev = [
+  "pytest>=8.0",
+  "responses>=0.25",
+  "jsonschema>=4.0",
+  "langchain-core>=0.3",
+  "langgraph>=0.2",
+]
+
+[project.urls]
+Homepage = "https://runback.dev/docs"
+Repository = "https://github.com/letsRunback/runback-proofs"
+Issues = "https://runback.dev/support"
+
+[tool.hatch.build.targets.wheel]
+packages = ["runback"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

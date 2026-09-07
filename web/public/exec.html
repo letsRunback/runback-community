@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Runback — Executive Briefing</title>
+<style>
+  :root{
+    --bg:#09090f; --panel:#101019; --card:#14141f; --line:#222230; --line2:#2f2f40;
+    --ink:#f5f6fa; --mut:#a7aaba; --dim:#71748a;
+    --blue:#4f9cf9; --violet:#7c5cfc; --emerald:#10b981; --rose:#f43f5e; --amber:#f59e0b;
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+    --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden}
+  .deck{position:fixed;inset:0}
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;
+    padding:clamp(1.8rem,6vw,6rem) clamp(2rem,7vw,7rem);opacity:0}
+  .slide.on{display:flex;animation:slideIn .5s ease forwards}
+  @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin-bottom:1.2rem;display:flex;align-items:center;gap:.6rem}
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--violet);box-shadow:0 0 12px var(--violet)}
+  .eyebrow.r{color:var(--rose)}.eyebrow.r::before{background:var(--rose);box-shadow:0 0 12px var(--rose)}
+  .eyebrow.b{color:var(--blue)}.eyebrow.b::before{background:var(--blue);box-shadow:0 0 12px var(--blue)}
+  .eyebrow.e{color:var(--emerald)}.eyebrow.e::before{background:var(--emerald);box-shadow:0 0 12px var(--emerald)}
+  h1{font-family:var(--serif);font-weight:500;font-size:clamp(2.3rem,6vw,4.6rem);line-height:1.03;letter-spacing:-.02em;max-width:20ch}
+  h2{font-family:var(--serif);font-weight:500;font-size:clamp(1.7rem,3.9vw,2.9rem);line-height:1.1;letter-spacing:-.02em;max-width:26ch}
+  .lead{color:var(--mut);font-size:clamp(.98rem,1.45vw,1.25rem);line-height:1.6;max-width:64ch;margin-top:1.2rem}
+  .lead.s{font-size:.95rem}
+  .accent{color:var(--blue)} .av{color:var(--violet)} .ar{color:var(--rose)} .ae{color:var(--emerald)}
+  .mono{font-family:var(--mono)}
+  .row{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.8rem}
+  .chip{font-family:var(--mono);font-size:.76rem;color:var(--mut);border:1px solid var(--line2);border-radius:7px;padding:.4rem .7rem}
+  .chip.b{border-color:var(--blue);color:var(--blue)}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-top:2rem;max-width:1040px}
+  .g3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2rem;max-width:1080px}
+  .g4{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-top:1.8rem;max-width:1040px}
+  .card{border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.45rem;background:linear-gradient(180deg,#ffffff05,transparent)}
+  .card .k{font-family:var(--mono);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+  .card h3{font-family:var(--serif);font-weight:500;font-size:1.25rem;margin:.45rem 0 .4rem}
+  .card p{color:var(--mut);font-size:.9rem;line-height:1.55}
+  .card .pf{display:inline-block;margin-top:.8rem;font-family:var(--mono);font-size:.68rem;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:.26rem .5rem}
+  .stat-row{display:flex;gap:clamp(1.5rem,4vw,3.5rem);flex-wrap:wrap;margin-top:2rem}
+  .stat .v{font-family:var(--serif);font-size:clamp(2rem,4.2vw,3.2rem);letter-spacing:-.02em;line-height:1}
+  .stat .l{color:var(--mut);font-size:.88rem;margin-top:.45rem;max-width:26ch;line-height:1.45}
+  /* lifecycle */
+  .flow{display:flex;align-items:stretch;gap:.7rem;flex-wrap:wrap;margin-top:2.2rem}
+  .flow .step{border:1px solid var(--line2);border-radius:12px;padding:.9rem 1.2rem;min-width:140px;flex:1}
+  .flow .step .n{font-family:var(--mono);font-size:.64rem;color:var(--violet);letter-spacing:.08em}
+  .flow .step .t{font-family:var(--serif);font-size:1.25rem;margin-top:.25rem}
+  .flow .step small{display:block;color:var(--dim);font-size:.74rem;margin-top:.25rem}
+  .flow .arr{color:var(--dim);align-self:center;font-family:var(--mono)}
+  /* demo */
+  .demo{margin-top:1.8rem;max-width:780px;border:1px solid var(--line2);border-radius:14px;padding:1.2rem 1.35rem;background:var(--panel)}
+  .demo .bar{display:flex;justify-content:space-between;font-family:var(--mono);font-size:.74rem;color:var(--dim);margin-bottom:.9rem}
+  .erow{display:flex;align-items:center;gap:.8rem;padding:.5rem .8rem;border:1px solid var(--line);border-radius:9px;font-size:.9rem;margin-bottom:.45rem;opacity:0}
+  .on .erow{animation:pop .45s ease forwards}
+  .on .erow:nth-child(2){animation-delay:.15s}.on .erow:nth-child(3){animation-delay:.45s}
+  .on .erow:nth-child(4){animation-delay:.75s}.on .erow:nth-child(5){animation-delay:1.05s}
+  @keyframes pop{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+  .erow .t{flex:1}.erow .m{font-family:var(--mono);font-size:.74rem;color:var(--dim)}
+  .erow.bad{border-color:#f43f5e88;background:#f43f5e14;color:var(--rose)}.erow.bad .m{color:var(--rose)}
+  .erow.ok2{border-color:#10b98155}
+  .cmp{display:grid;grid-template-columns:1fr auto 1fr;gap:.9rem;align-items:center}
+  .cmp .b{border:1px solid var(--line);border-radius:11px;padding:.9rem 1rem}
+  .cmp .b.now{border-color:var(--blue);background:#4f9cf90f}
+  .cmp .h{font-family:var(--mono);font-size:.64rem;text-transform:uppercase;letter-spacing:.05em;color:var(--dim)}
+  .cmp p{font-size:.88rem;margin:.45rem 0 .6rem;line-height:1.45}
+  .cmp .ar2{font-family:var(--mono);color:var(--dim);font-size:.72rem}
+  .verd{font-family:var(--mono);font-size:.7rem;padding:.3rem .5rem;border-radius:6px;display:inline-block}
+  .verd.bad{color:var(--rose);background:#f43f5e1a}.verd.ok{color:var(--emerald);background:#10b9811a}
+  .ce{display:flex;gap:.8rem;align-items:center;padding:.45rem .8rem;border:1px solid var(--line);border-radius:9px;margin-bottom:.4rem;font-size:.86rem}
+  .ce .s{font-family:var(--mono);color:var(--dim);font-size:.72rem}
+  .ce .hash{margin-left:auto;font-family:var(--mono);font-size:.7rem;color:var(--dim)}
+  .ce.x{border-color:#f43f5e88;background:#f43f5e14;color:var(--rose)}.ce.x .hash{color:var(--rose)}
+  .on .ce.x{animation:flag .6s ease .9s both}@keyframes flag{from{opacity:.4}to{opacity:1}}
+  /* compare table */
+  .ctab{margin-top:1.8rem;max-width:980px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .ctab .tr{display:grid;grid-template-columns:1.4fr 1fr 1fr;border-top:1px solid var(--line)}
+  .ctab .tr:first-child{border-top:0}
+  .ctab .td{padding:.85rem 1.1rem;font-size:.9rem;color:var(--mut)}
+  .ctab .td.h{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--dim)}
+  .ctab .td.us{color:var(--ink)} .yes{color:var(--emerald)} .no{color:var(--dim)}
+  .ctab .tr.head .td.us{color:var(--blue)}
+  /* model funnel */
+  .model{display:flex;gap:1rem;margin-top:2rem;max-width:1000px;flex-wrap:wrap}
+  .tier{flex:1;min-width:200px;border:1px solid var(--line);border-radius:13px;padding:1.2rem 1.3rem}
+  .tier.feat{border-color:var(--blue)}
+  .tier .p{font-family:var(--serif);font-size:1.6rem;margin:.3rem 0 .2rem}
+  .tier .nm{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+  .tier .d{color:var(--mut);font-size:.85rem;line-height:1.45;margin-top:.4rem}
+  /* chrome / nav */
+  .chrome{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;padding:1rem clamp(2rem,7vw,7rem);font-family:var(--mono);font-size:.72rem;color:var(--dim);z-index:6}
+  .dots{display:flex;gap:.4rem}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--line2);cursor:pointer;transition:.2s}
+  .dot.on{background:var(--blue);box-shadow:0 0 8px var(--blue);transform:scale(1.2)}
+  .brand{display:flex;align-items:center;gap:.55rem;font-family:var(--sans);color:var(--mut);font-weight:600}
+  .brand b{width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,var(--blue),var(--violet))}
+  .nav{display:flex;gap:.5rem;align-items:center}
+  .nb{width:38px;height:38px;border-radius:9px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font-size:1.1rem;cursor:pointer;display:grid;place-items:center;transition:.15s}
+  .nb:hover{border-color:var(--blue);color:var(--blue)}
+  .nb:disabled{opacity:.3;cursor:default}
+  .zone{position:fixed;top:0;bottom:64px;width:32%;z-index:4;cursor:pointer}
+  .zone.l{left:0}.zone.r{right:0;width:50%}
+  .hint{position:fixed;top:1.1rem;right:clamp(2rem,7vw,7rem);font-family:var(--mono);font-size:.66rem;color:var(--dim);z-index:6}
+  @media(max-width:760px){
+    .hint{display:none}
+    .zone{display:none}                       /* avoid accidental nav while reading; use swipe + buttons */
+    .dots{display:none}                        /* 15 dots too many on a phone */
+    .slide{justify-content:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:3.4rem 1.3rem 5rem}
+    .slide::-webkit-scrollbar{display:none}
+    h1{font-size:2.05rem;max-width:none}
+    h2{font-size:1.5rem;max-width:none}
+    .lead{font-size:.94rem;margin-top:.9rem}
+    .eyebrow{margin-bottom:.9rem}
+    .row,.stat-row{margin-top:1.3rem}.stat-row{gap:1.3rem 2rem}
+    .g2,.g3,.g4,.model{grid-template-columns:1fr;margin-top:1.4rem}
+    .card{padding:1.1rem 1.2rem}
+    .cmp{display:flex;flex-direction:column;gap:.6rem}.cmp .ar2{text-align:center}
+    .flow{flex-direction:column;margin-top:1.4rem}.flow .arr{transform:rotate(90deg);align-self:center}
+    .demo{margin-top:1.4rem;padding:1rem}
+    .ctab{margin-top:1.4rem}
+    .ctab .tr{grid-template-columns:1.7fr .55fr .85fr}
+    .ctab .td{padding:.6rem .5rem;font-size:.78rem}
+    .ctab .td.h{font-size:.58rem}
+    .ctab .tr .td:nth-child(2),.ctab .tr .td:nth-child(3){text-align:center;justify-content:center}
+    .chrome{padding:.7rem 1rem}
+    .nav .nb{width:34px;height:34px;font-size:1rem}
+  }
+</style>
+</head>
+<body>
+<div class="hint">click sides / → / swipe · F fullscreen</div>
+<div class="zone l" id="zl"></div><div class="zone r" id="zr"></div>
+<div class="deck" id="deck">
+
+  <!-- 1 Title -->
+  <section class="slide">
+    <div class="eyebrow">Executive briefing · confidential</div>
+    <h1>The system of record for <span class="accent">AI agents</span>.</h1>
+    <p class="lead">Enterprises are handing real decisions to AI agents — refunds, approvals, escalations, trades. None can yet reproduce, prove, or govern what those agents did. Runback is the platform that makes every agent decision re-runnable, tamper-evident, and gated — in the customer's own perimeter.</p>
+    <div class="row"><span class="chip b">runback.dev</span><span class="chip">observe → replay → gate → audit</span><span class="chip">free Community · self-host</span></div>
+  </section>
+
+  <!-- 2 Problem / exposure -->
+  <section class="slide">
+    <div class="eyebrow r">The problem</div>
+    <h2>Agents are making decisions no one can explain — or undo.</h2>
+    <p class="lead">An agent chains dozens of model calls and tool actions per run. When one goes wrong, logs show <em>what</em> happened, never <em>why</em>. You can't reproduce the incident, prove the fix, or show a control was in place. For a regulated enterprise, that's unbounded operational, legal, and reputational exposure on every automated decision.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="v ar">$0</div><div class="l">reproducible evidence when an agent decision is challenged today</div></div>
+      <div class="stat"><div class="v ar">100%</div><div class="l">of enterprises deploying agents carry this exposure right now</div></div>
+    </div>
+  </section>
+
+  <!-- 3 Why now -->
+  <section class="slide">
+    <div class="eyebrow">Why now</div>
+    <h2>Two curves are colliding — adoption and regulation.</h2>
+    <div class="g2">
+      <div class="card"><div class="k">Adoption</div><h3>Agents are going to production</h3><p>The shift from chatbots to autonomous agents that take actions is the fastest-moving enterprise software wave since cloud. Every one of them needs a record.</p></div>
+      <div class="card"><div class="k">Regulation</div><h3>The mandate is dated</h3><p>EU AI Act Art. 12 logging is enforceable <b class="ar">Aug 2026</b>. APRA CPS 230, UNECE DSSAD, NIST AI RMF all now require traceability of automated decisions.</p></div>
+    </div>
+    <p class="lead s">The forcing function isn't optional, and it's on the calendar. The buyer has to solve this — the only question is with what.</p>
+  </section>
+
+  <!-- 4 Market -->
+  <section class="slide">
+    <div class="eyebrow b">The opportunity</div>
+    <h2>Governance is to agents what observability was to cloud.</h2>
+    <p class="lead">Every cloud workload needed observability — and that mandatory layer built Datadog (~$40B), Splunk, New Relic. Every autonomous agent needs governance: a system of record. Same inevitability, a category forming right now, with the regulatory deadline pulling demand forward.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="v av">Mandatory</div><div class="l">a layer every agent deployer must adopt — not a nice-to-have</div></div>
+      <div class="stat"><div class="v av">Greenfield</div><div class="l">no incumbent owns "system of record for agents" yet</div></div>
+      <div class="stat"><div class="v av">Expanding</div><div class="l">value grows with every agent and decision a customer runs</div></div>
+    </div>
+  </section>
+
+  <!-- 5 Category / positioning -->
+  <section class="slide">
+    <div class="eyebrow">The category</div>
+    <h2>Observability shows you logs. We let you re-run them.</h2>
+    <p class="lead">A flight recorder versus a flight simulator. Existing tools record what an agent did and stop there. Runback re-executes any decision deterministically, gates the change against policy, and seals a signed record nothing can alter. That's the difference between watching your agents and being accountable for them.</p>
+    <div class="flow">
+      <div class="step"><div class="n">01</div><div class="t">Observe</div><small>capture every decision</small></div><span class="arr">→</span>
+      <div class="step"><div class="n">02</div><div class="t">Replay</div><small>re-run it, any model</small></div><span class="arr">→</span>
+      <div class="step"><div class="n">03</div><div class="t">Gate</div><small>block regressions</small></div><span class="arr">→</span>
+      <div class="step"><div class="n">04</div><div class="t">Audit</div><small>seal the proof</small></div>
+    </div>
+  </section>
+
+  <!-- 6 Demo: observe -->
+  <section class="slide">
+    <div class="eyebrow b">Demo · 01 Observe</div>
+    <h2>Capture every decision — down to the step that broke.</h2>
+    <div class="demo">
+      <div class="bar"><span>support-refund-agent · run</span><span class="ar">failed</span></div>
+      <div class="erow"><span class="mono">◇</span><span class="t">agent reasons over the dispute</span><span class="m">gpt-4o</span></div>
+      <div class="erow"><span class="mono">↳</span><span class="t">lookup_customer</span><span class="m">gold tier</span></div>
+      <div class="erow"><span class="mono">◇</span><span class="t">decide → issue_refund $250</span><span class="m">gpt-4o</span></div>
+      <div class="erow bad"><span class="mono">✗</span><span class="t">policy breach — disputed charge, no escalation</span><span class="m">blocked</span></div>
+    </div>
+  </section>
+
+  <!-- 7 Demo: replay -->
+  <section class="slide">
+    <div class="eyebrow b">Demo · 02 Replay</div>
+    <h2>Re-run the exact decision — on any model.</h2>
+    <div class="demo">
+      <div class="cmp">
+        <div class="b"><div class="h">Then · gpt-4o</div><p>"Gold tier — issuing the $250 refund."</p><span class="verd bad">issue_refund · breach</span></div>
+        <div class="ar2">replay →</div>
+        <div class="b now"><div class="h">Now · re-run</div><p>"Disputed and over the limit — routing to a human."</p><span class="verd ok">escalate · within policy</span></div>
+      </div>
+      <p class="lead s" style="margin-top:.9rem">Same captured input, two models — the difference measured on a real case, not a toy prompt. Deterministic, offline, in CI.</p>
+    </div>
+  </section>
+
+  <!-- 8 Demo: gate -->
+  <section class="slide">
+    <div class="eyebrow b">Demo · 03 Gate</div>
+    <h2>Block the regression before it ships.</h2>
+    <div class="demo">
+      <div class="erow ok2"><span class="mono ae">✓</span><span class="t">refund ≤ $100 limit</span></div>
+      <div class="erow ok2"><span class="mono ae">✓</span><span class="t">stays within disclosure policy</span></div>
+      <div class="erow bad"><span class="mono">✗</span><span class="t">disputed charge → must escalate</span></div>
+      <div class="mono ar" style="font-size:.8rem;margin-top:.3rem">release blocked — 1 regression caught pre-deploy · policy-as-code, exact verdict</div>
+    </div>
+  </section>
+
+  <!-- 9 Demo: audit -->
+  <section class="slide">
+    <div class="eyebrow b">Demo · 04 Audit</div>
+    <h2>A record nothing can alter.</h2>
+    <div class="demo">
+      <div class="bar"><span class="ae">✓ signed checkpoint</span><span>head 62b7…f0b8 · merkle 3e68…df98</span></div>
+      <div class="ce"><span class="s">#0</span> kyc-onboarding-agent · approved <span class="hash">a3f1…b90c</span></div>
+      <div class="ce x"><span class="s">#1</span> support-refund-agent · <b>altered after sealing</b> <span class="hash">chain broken</span></div>
+      <div class="ce x"><span class="s">#2</span> research-agent <span class="hash">chain broken</span></div>
+      <div class="mono ar" style="font-size:.8rem;margin-top:.4rem">✗ verify — tamper detected at #1: head ≠ sealed. Nothing can be altered, deleted, or inserted.</div>
+    </div>
+  </section>
+
+  <!-- 10 How it connects (integration / data flow) -->
+  <section class="slide">
+    <div class="eyebrow b">How it connects</div>
+    <h2>One hookup, in your stack. Capture is a post-hook — never in the critical path.</h2>
+    <div class="flow">
+      <div class="step"><div class="n">YOUR AGENT</div><div class="t">Instrument once</div><small>3-line SDK, a base-URL swap, or your existing OpenTelemetry traces — any language</small></div><span class="arr">→</span>
+      <div class="step"><div class="n">IN-PROCESS</div><div class="t">Redact</div><small>secrets &amp; PII stripped before a trace leaves your process</small></div><span class="arr">→</span>
+      <div class="step"><div class="n">YOUR STORE</div><div class="t">Postgres you own</div><small>self-host in your VPC, or our managed cloud</small></div><span class="arr">→</span>
+      <div class="step"><div class="n">ON THE TRACE</div><div class="t">Replay · Gate · Audit</div><small>every feature runs on the captured trace</small></div>
+    </div>
+    <p class="lead s">Your model calls run untouched — Runback records the request, response, tokens, tools and latency after the fact. Evals and policy gates operate on those captured traces, and existing OpenTelemetry pipelines stream straight in. Nothing about your agent changes beyond the one-time hookup.</p>
+  </section>
+
+  <!-- 11 Moat / depth (CTO) -->
+  <section class="slide">
+    <div class="eyebrow av">The moat · for your CTO</div>
+    <h2>Built to a depth a competitor can't ship in a quarter.</h2>
+    <div class="g4">
+      <div class="card"><div class="k">Reproduce</div><h3>Deterministic replay, to the decision</h3><p>Re-run a real incident bit-for-bit — tools, retrieval, randomness, clock — then fork LIVE at the exact point a changed model diverges. Hold everything fixed, move one variable.</p><span class="pf">environment-deterministic · CI-verified</span></div>
+      <div class="card"><div class="k">Diagnose</div><h3>Bisection</h3><p>Binary-search the model/prompt timeline for the one change that introduced a regression — in log₂ probes, not a manual hunt.</p><span class="pf">git-bisect, for agent behaviour</span></div>
+      <div class="card"><div class="k">Govern</div><h3>Simulate → enforce → prove</h3><p>One policy engine: simulate a rule against 90 days of history, enforce it in-process BEFORE the action runs, and seal a re-runnable proof of the block.</p><span class="pf">no network in the agent's path</span></div>
+      <div class="card"><div class="k">Compound</div><h3>A golden suite mined from production</h3><p>Every incident auto-becomes a permanent, deduped regression test — re-run on any candidate model before release. The corpus grows with every run.</p><span class="pf">a data asset rivals start at zero on</span></div>
+    </div>
+  </section>
+
+  <!-- 12 Security, trust & procurement (CISO) -->
+  <section class="slide">
+    <div class="eyebrow e">Security, trust &amp; procurement · for your CISO</div>
+    <h2>Built so your auditors — not just your engineers — sign off.</h2>
+    <div class="g3">
+      <div class="card"><h3>Data never leaves</h3><p>Self-host in your VPC with one <span class="mono">docker compose up</span>. Secrets &amp; PII redacted in-process before egress. Your store, your retention, your keys.</p></div>
+      <div class="card"><h3>Access &amp; identity</h3><p>OIDC SSO — Okta, Entra, Google, Auth0, Ping — and owner/admin/member/viewer RBAC. API keys &amp; session tokens stored only as hashes.</p></div>
+      <div class="card"><h3>Tamper-evident record</h3><p>Per-run SHA-256 hash chain + HMAC signature, plus an append-only, Merkle-rooted org ledger. Alter one past decision and verification pinpoints it.</p></div>
+    </div>
+    <p class="lead s">Procurement-ready: a published security page, a pre-filled CAIQ-lite, DPA, Terms &amp; Privacy — and we join your review. <span class="mono">runback.dev/security · /procurement</span></p>
+  </section>
+
+  <!-- 12 Competition -->
+  <section class="slide">
+    <div class="eyebrow">Competitive landscape</div>
+    <h2>The others observe. Runback re-executes and proves.</h2>
+    <div class="ctab">
+      <div class="tr head"><div class="td h">Capability</div><div class="td h us">Runback</div><div class="td h">Observability tools*</div></div>
+      <div class="tr"><div class="td">See what the agent did</div><div class="td us"><span class="yes">✓</span></div><div class="td"><span class="yes">✓</span></div></div>
+      <div class="tr"><div class="td">Deterministically re-run any decision</div><div class="td us"><span class="yes">✓</span></div><div class="td"><span class="no">—</span></div></div>
+      <div class="tr"><div class="td">Tamper-evident, signed system of record</div><div class="td us"><span class="yes">✓</span></div><div class="td"><span class="no">—</span></div></div>
+      <div class="tr"><div class="td">Policy-as-code release gate + regression diff</div><div class="td us"><span class="yes">✓</span></div><div class="td"><span class="no">partial</span></div></div>
+      <div class="tr"><div class="td">In your perimeter, self-hostable</div><div class="td us"><span class="yes">✓</span></div><div class="td"><span class="no">mostly SaaS</span></div></div>
+    </div>
+    <p class="lead s" style="margin-top:1rem">*LangSmith, Langfuse, Arize, Braintrust — read-only observability. None re-execute or prove.</p>
+  </section>
+
+  <!-- 13 Business model -->
+  <section class="slide">
+    <div class="eyebrow b">Business model</div>
+    <h2>Land free, expand to paid.</h2>
+    <p class="lead">The free core seeds adoption inside engineering; the platform monetizes when a team runs it for real and when risk needs the governed edition. Value — and price — scales with the number of agents and decisions a customer governs, not seats.</p>
+    <div class="model">
+      <div class="tier"><div class="nm">Community</div><div class="p">Free</div><div class="d">Free Community edition — capture, replay, audit, evals. Lands inside engineering.</div></div>
+      <div class="tier feat"><div class="nm">Pro</div><div class="p">$5,000<span style="font-size:.9rem;color:var(--dim)">/mo</span></div><div class="d">Managed platform — fleet dashboard, teams, alerting. Expands across the org.</div></div>
+      <div class="tier"><div class="nm">Enterprise</div><div class="p">Custom</div><div class="d">In-perimeter — SSO, the signed ledger, long retention, SLAs. Where risk signs off.</div></div>
+    </div>
+  </section>
+
+  <!-- 15 How you adopt it (onboarding · buy · support) -->
+  <section class="slide">
+    <div class="eyebrow b">How you adopt it</div>
+    <h2>From a live demo to a governed rollout — in days, not a procurement quarter.</h2>
+    <div class="flow">
+      <div class="step"><div class="n">SEE IT</div><div class="t">Live demo</div><small>one click, no signup — a populated workspace at runback.dev</small></div><span class="arr">→</span>
+      <div class="step"><div class="n">PILOT</div><div class="t">Self-host one agent</div><small>docker compose up in your VPC — nothing leaves, short review</small></div><span class="arr">→</span>
+      <div class="step"><div class="n">BUY</div><div class="t">Self-serve Pro</div><small>$5k/mo, card or invoice — or talk to us for Enterprise</small></div><span class="arr">→</span>
+      <div class="step"><div class="n">SCALE</div><div class="t">Govern the fleet</div><small>managed cloud or in-perimeter, named support</small></div>
+    </div>
+    <p class="lead s">Support scales with the plan: priority email on Pro; a named contact and severity-based SLAs — Sev 1 response in 1 hour, 24×7 — on Enterprise. <span class="mono">runback.dev/pricing · /support</span></p>
+  </section>
+
+  <!-- 16 Traction / execution -->
+  <section class="slide">
+    <div class="eyebrow e">Execution</div>
+    <h2>The hard part is already built — and verifiable today.</h2>
+    <p class="lead">This isn't a concept deck. The platform is live, the deep technology is shipped, and every claim is provable in public CI. The remaining work is go-to-market, not invention.</p>
+    <div class="g4">
+      <div class="card"><h3>Platform live</h3><p>End-to-end: capture, deterministic replay, whole-run counterfactual, bisection, policy simulation + runtime enforcement, the golden suite, signed audit + ledger, SSO, billing — in production.</p></div>
+      <div class="card"><h3>Deep tech, done</h3><p>Environment-deterministic replay that forks live past divergence, bisection, in-process enforcement, and a Merkle-rooted ledger — the parts rivals can't shortcut — built and tested.</p></div>
+      <div class="card"><h3>Verifiable in public</h3><p>Verification runs in public CI — credibility a buyer's engineers can check themselves.</p></div>
+      <div class="card"><h3>Deploys in a day</h3><p>One agent, one <span class="mono">docker compose up</span>, inside a customer's perimeter — a short, low-friction security review.</p></div>
+    </div>
+  </section>
+
+  <!-- 15 Vision / ask -->
+  <section class="slide">
+    <div class="eyebrow av">The vision</div>
+    <h1>The control plane for the <span class="av">agent economy</span>.</h1>
+    <p class="lead">Every autonomous agent an enterprise runs will need a system of record — to govern it, prove it, and answer for it. Runback is positioned to be that layer, in the customer's perimeter, defended by depth competitors can't reach. The category is forming now, the deadline is set, and the platform is built.</p>
+    <div class="row"><span class="chip b">runback.dev</span><span class="chip">deploy one agent this week</span><span class="chip">partner with us</span></div>
+  </section>
+
+</div>
+
+<div class="chrome">
+  <div class="brand"><b></b> Runback</div>
+  <div class="dots" id="dots"></div>
+  <div class="nav"><button class="nb" id="prev">‹</button><span id="counter">01 / 17</span><button class="nb" id="next">›</button></div>
+</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  const dotsEl=document.getElementById('dots'), counter=document.getElementById('counter');
+  const prevB=document.getElementById('prev'), nextB=document.getElementById('next');
+  let i=0;
+  slides.forEach((_,k)=>{const d=document.createElement('div');d.className='dot';d.addEventListener('click',()=>go(k));dotsEl.appendChild(d);});
+  const dots=[...dotsEl.children];
+  const pad=n=>String(n+1).padStart(2,'0');
+  function go(n){
+    i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('on',k===i));
+    dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+    counter.textContent=pad(i)+' / '+pad(slides.length-1);
+    prevB.disabled=i===0; nextB.disabled=i===slides.length-1;
+  }
+  nextB.addEventListener('click',()=>go(i+1));
+  prevB.addEventListener('click',()=>go(i-1));
+  document.getElementById('zr').addEventListener('click',()=>go(i+1));
+  document.getElementById('zl').addEventListener('click',()=>go(i-1));
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();go(i+1);}
+    else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();go(i-1);}
+    else if(e.key==='Home')go(0); else if(e.key==='End')go(slides.length-1);
+    else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+  });
+  let sx=0;addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});
+  addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>50)go(i+(dx<0?1:-1));},{passive:true});
+  go(0);
+</script>
+</body>
+</html>

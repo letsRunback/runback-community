@@ -1,0 +1,67 @@
+Runback Commercial Licence
+Copyright © 2026 Runback Pty Ltd. All rights reserved.
+
+This licence governs the "Enterprise Features" of Runback. Everything else in
+this repository is the Community edition, licenced separately under the Runback
+Community Licence (see LICENSE-COMMUNITY). See LICENSING.md for the full mapping.
+
+1. Definitions
+
+   "Enterprise Features" means the functionality that the software's entitlement
+   system gates behind a paid plan or unlocks via a signed RUNBACK_LICENSE token —
+   namely: multi-tenant workspaces, the fleet control-room dashboard, team roles
+   and access control (RBAC), single sign-on (SSO), alerting, usage metering and
+   billing, and extended ("long") data retention, together with the code that
+   implements them (including, without limitation, the files listed in
+   LICENSING.md).
+
+   "Valid Licence" means a current, Runback-issued licence token, verified by the
+   software against Runback's published signing key.
+
+2. Grant
+
+   Subject to a Valid Licence and payment of the applicable fees, Runback grants
+   you a non-exclusive, non-transferable, non-sublicensable licence to use the
+   Enterprise Features in production for your own internal business purposes, for
+   the term and seat/usage scope stated in your order.
+
+3. No source licence
+
+   The Enterprise Features are Runback's confidential and proprietary property. No
+   source code is licenced to you, and any incidental access to source grants you no
+   right to copy, modify, disclose, reverse engineer, or reuse it. Use of the
+   Enterprise Features in production, or for the benefit of third parties, requires
+   a Valid Licence.
+
+4. Restrictions
+
+   Without a Valid Licence you may not: (a) use the Enterprise Features in
+   production; (b) remove, disable, bypass, or circumvent the licence verification
+   or any entitlement check; (c) re-issue, forge, or share licence tokens; or
+   (d) offer the Enterprise Features to third parties as a hosted or managed
+   service. You may not use Runback's name or marks except to identify the origin
+   of the software.
+
+5. Community edition is unaffected
+
+   Nothing in this licence restricts your rights to the Community edition under
+   the Runback Community Licence (LICENSE-COMMUNITY). You may run, modify, and
+   distribute the Community edition on those terms, with no licence token
+   required, subject to that licence's own limits — in particular its
+   hosted-service boundary. The Community Licence is source-available, not open
+   source.
+
+6. Termination
+
+   This licence terminates automatically if you breach it or your subscription
+   lapses. On termination you must stop using the Enterprise Features in
+   production. The Community edition remains available to you under the Runback
+   Community Licence, provided you are in compliance with it.
+
+7. Warranty and liability
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM
+   EXTENT PERMITTED BY LAW, RUNBACK SHALL NOT BE LIABLE FOR ANY INDIRECT,
+   INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING FROM THE SOFTWARE.
+
+To purchase a licence: https://runback.dev/contact

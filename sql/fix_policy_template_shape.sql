@@ -1,0 +1,16 @@
+-- The 8 built-in policy-library templates were seeded (on first read of
+-- /app/policies/library, via seedIfEmpty() in lib/policyLibrary.ts) with a
+-- rule shape the real policy evaluator (packages/policy/src/index.ts) cannot
+-- read at all — {type, tool, condition, message} instead of the real
+-- {kind, pred/when/then} shape. Importing any of them produced a policy that
+-- silently fails open at runtime (the SDK's enforcement pre-hook catches the
+-- resulting exception) and throws outright in simulation or the CI eval gate.
+--
+-- lib/policyLibrary.ts now seeds the corrected 5 templates (3 of the original
+-- 8 couldn't be honestly expressed in the real predicate vocabulary at all —
+-- see that file's comment). This clears whatever got seeded under the old
+-- code so the next read re-seeds clean. Scoped to the built-in rows only
+-- (author = 'runback', is_public = true) — never touches an org's own
+-- imported policy (ad_policies, untouched by this) or a community-contributed
+-- template (author != 'runback').
+DELETE FROM ad_policy_templates WHERE author = 'runback' AND is_public = true;

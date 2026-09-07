@@ -1,0 +1,73 @@
+{
+  "name": "@runback/sdk",
+  "version": "0.5.0",
+  "description": "Capture, replay, and audit every AI agent decision. Auto-instruments the Vercel AI SDK; a generic recorder (@runback/sdk/core) can be called manually from LangChain, OpenTelemetry, or any other agent framework's own hooks.",
+  "keywords": [
+    "ai-agents",
+    "llm",
+    "observability",
+    "replay",
+    "audit",
+    "governance",
+    "vercel-ai-sdk",
+    "tracing",
+    "evals",
+    "compliance",
+    "eu-ai-act",
+    "policy-enforcement",
+    "runback"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js",
+      "require": "./dist/core.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup && node scripts/emit-workspace-types.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "license": "MIT",
+  "author": "Runback <contact@runback.dev> (https://runback.dev)",
+  "homepage": "https://runback.dev/docs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/letsRunback/runback-proofs.git"
+  },
+  "bugs": {
+    "url": "https://runback.dev/support"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "ulid": "^2.3.0"
+  },
+  "peerDependencies": {
+    "ai": "^6.0.0"
+  },
+  "devDependencies": {
+    "ai": "^6.0.204",
+    "tsup": "^8.5.1"
+  },
+  "peerDependenciesMeta": {
+    "ai": {
+      "optional": true
+    }
+  }
+}

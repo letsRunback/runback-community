@@ -1,0 +1,15 @@
+{
+  "name": "@runback/replay",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Deterministic record/replay (cassettes) for AI agent runs — verifiable, offline reproduction of a recorded run.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@runback/schema": "*"
+  }
+}

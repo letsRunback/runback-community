@@ -1,0 +1,16 @@
+{
+  "name": "@runback/gateway",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Language-agnostic recording/replay gateway — capture any agent's external calls with one base-URL change. No SDK, any language.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@runback/redact": "*",
+    "@runback/replay": "*"
+  }
+}

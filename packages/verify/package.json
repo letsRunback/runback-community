@@ -1,0 +1,44 @@
+{
+  "name": "@runback/verify",
+  "version": "2.1.0",
+  "description": "Verify tamper-evidence and integrity of Runback audit cassettes (runback.cassette/v1). No account required.",
+  "type": "module",
+  "main": "./index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "bin": {
+    "runback-verify": "cli.js"
+  },
+  "files": [
+    "index.js",
+    "cli.js",
+    "README.md"
+  ],
+  "keywords": [
+    "ai-agents",
+    "audit",
+    "governance",
+    "tamper-evident",
+    "verification",
+    "runback",
+    "cassette",
+    "eu-ai-act",
+    "compliance",
+    "llm",
+    "opentelemetry"
+  ],
+  "license": "MIT",
+  "author": "Runback <contact@runback.dev> (https://runback.dev)",
+  "homepage": "https://runback.dev/spec",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/letsRunback/runback-proofs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/letsRunback/runback-proofs/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

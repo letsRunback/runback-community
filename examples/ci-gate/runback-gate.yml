@@ -1,0 +1,30 @@
+# Runback CI release gate — drop into .github/workflows/
+#
+# Fails the PR if the agent's behaviour no longer reproduces the baseline
+# cassette. Deterministic, offline, zero model calls — safe to run on every PR,
+# even air-gapped. The baseline digest equals the signed audit record's
+# `cassette_digest`, so a green check also means "still reproduces the audited
+# behaviour."
+name: runback-gate
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm ci
+      # Replay the current agent against the committed baseline cassette.
+      # Pass --expect with the digest from your signed audit record to also
+      # detect a swapped baseline file.
+      - name: Runback release gate
+        run: >-
+          npx tsx node_modules/@runback/replay/bin/gate.ts
+          --baseline ./baselines/refund-agent.cassette.json
+          --agent ./src/agent.replay.ts

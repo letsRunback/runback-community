@@ -1,0 +1,21 @@
+Runback is commercial software with a free, source-available Community edition.
+Two licences apply:
+
+• Community edition — Runback Community Licence — see LICENSE-COMMUNITY.
+  The core developer toolchain: run capture, deterministic time-travel replay,
+  the signed re-executable audit record, evals + the release gate, and a single
+  workspace. Free to install, run, and self-host — no licence token required.
+  The source is published: you may read, modify, and redistribute it under that
+  licence. This is source-available, NOT open source — the licence restricts the
+  field of use (you may not offer Runback to third parties as a hosted or managed
+  service), which the Open Source Definition does not permit.
+
+• Enterprise Features — Runback Commercial Licence — see LICENSE-ENTERPRISE.
+  Multi-tenant workspaces, the fleet dashboard, team roles (RBAC), SSO, alerting,
+  usage metering/billing, and long retention. Production use requires a signed
+  Runback licence token (RUNBACK_LICENSE). Setting an arbitrary value does not
+  unlock them — the token is cryptographically verified. Their source is not
+  included in the Community repository.
+
+All rights not expressly granted are reserved. LICENSING.md maps every feature and
+the key files to its licence. Get an Enterprise licence: https://runback.dev/contact

@@ -1,0 +1,7 @@
+*.dylib
+*.so
+probe
+*.out
+*.cassette
+*.audit.json
+native.cassette

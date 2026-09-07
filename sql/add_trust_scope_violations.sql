@@ -1,0 +1,11 @@
+-- Enforcing delegation scope (web/lib/trust.ts) needs somewhere to record
+-- what auditScopeViolations() actually finds: tool names a child run called
+-- that its declared, signed scope did not cover. This is a genuine finding
+-- independent of signature validity — a perfectly signed, unbroken chain can
+-- still record a subagent doing something it was never authorized to do.
+--
+-- NULL/empty means "checked, nothing out of bounds" (or "wildcard scope,
+-- nothing to check" — auditScopeViolations skips those edges entirely, so
+-- they never get a row written either way). Absence of a violation is never
+-- inferred from a missing column value alone.
+ALTER TABLE trust_attestations ADD COLUMN IF NOT EXISTS scope_violations text[];

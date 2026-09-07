@@ -1,0 +1,134 @@
+# Default values for the runback chart.
+# See README.md in this directory for the full setup walkthrough — in
+# particular, the data layer (Postgres/Supabase) is NOT part of this chart
+# and must exist first; this chart deploys the Runback web app itself,
+# pointed at whichever of the three options in docs/SELF_HOSTING.md#data-layer
+# you've already provisioned.
+
+replicaCount: 1
+
+image:
+  # No image is published to a public registry yet — build one from the
+  # repo root Dockerfile and push it to a registry your cluster can pull
+  # from, then point this at it:
+  #   docker build -t <your-registry>/runback:0.4.0 .
+  #   docker push <your-registry>/runback:0.4.0
+  repository: ""
+  tag: "0.4.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Not implemented by this chart yet — kept as an explicit off-switch so
+# templates/deployment.yaml can reference it safely if you wire up an HPA
+# yourself. replicaCount above is what actually controls pod count today.
+autoscaling:
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: runback.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  # - secretName: runback-tls
+  #   hosts:
+  #     - runback.example.com
+
+resources:
+  # Deliberately unset rather than a guessed default — a Next.js app's real
+  # footprint depends heavily on traffic and how much of the platform
+  # (replay especially) you're exercising. Start from `kubectl top pod`
+  # after a representative day, not a number picked without your workload.
+  {}
+  # requests:
+  #   cpu: 250m
+  #   memory: 512Mi
+  # limits:
+  #   cpu: "1"
+  #   memory: 1Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+podAnnotations: {}
+podSecurityContext:
+  runAsNonRoot: true
+  fsGroup: 1000
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false # Next.js writes to .next/cache at runtime
+  capabilities:
+    drop: ["ALL"]
+
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 20
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+# ── Configuration ────────────────────────────────────────────────────────
+# Non-secret values, injected as plain env vars.
+config:
+  NEXT_PUBLIC_APP_URL: "https://runback.example.com"
+  NODE_ENV: production
+  # Set only if your identity provider, alert targets, or SIEM collector are
+  # on private/internal addresses — normal inside a VPC/cluster network.
+  RUNBACK_ALLOW_PRIVATE_TARGETS: "false"
+
+# ── Secrets ──────────────────────────────────────────────────────────────
+# Two ways to provide these, matching how most clusters actually manage
+# secrets:
+#   1. Set the values below directly (fine for a first deploy / testing —
+#      NOT recommended for a real cluster, since Helm values land in
+#      `helm get values` history in plaintext).
+#   2. Set existingSecret to the name of a Secret you created out-of-band
+#      (kubectl, External Secrets Operator, Sealed Secrets, Vault, ...)
+#      with the SAME key names as under `secrets:` below. When set, the
+#      values under `secrets:` are ignored and existingSecret is used as-is.
+secrets:
+  existingSecret: ""
+
+  # Required — see docs/SELF_HOSTING.md#data-layer for how to provision these.
+  NEXT_PUBLIC_SUPABASE_URL: ""
+  SUPABASE_SERVICE_ROLE_KEY: ""
+
+  # Required — generate with: openssl rand -hex 32
+  JWT_SECRET: ""
+  AUDIT_SIGNING_KEY: ""
+  MODEL_KEY_SECRET: ""
+  CRON_SECRET: ""
+
+  # Optional but strongly recommended — asymmetric audit signing, verifiable
+  # offline with no shared secret. See .env.example for generation steps.
+  AUDIT_ED25519_PRIVATE_KEY: ""
+  AUDIT_ED25519_PUBLIC_KEY: ""
+
+  # Optional — without it, sign-in links print to pod logs instead of
+  # emailing (fine for evaluating, not for a real team).
+  RESEND_API_KEY: ""
+
+  # Optional — only needed for live "replay from step N" / LLM-judge evals.
+  OPENAI_API_KEY: ""
+  ANTHROPIC_API_KEY: ""
+  GROQ_API_KEY: ""

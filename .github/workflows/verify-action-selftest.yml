@@ -1,0 +1,52 @@
+# Dogfoods packages/verify-action against a real, currently-signed record
+# fetched from production — not a fixture that can drift from what the live
+# verifier actually accepts. Red here means the action itself is broken
+# before anyone downstream depends on it.
+name: verify-action-selftest
+on:
+  push:
+    paths:
+      - "packages/verify-action/**"
+      - "packages/verify/**"
+      - ".github/workflows/verify-action-selftest.yml"
+  workflow_dispatch:
+
+jobs:
+  valid-record:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch a real, live-signed cassette
+        run: curl -sf https://runback.dev/sample-cassette.json -o /tmp/sample-cassette.json
+      - name: verify it — must pass
+        uses: ./packages/verify-action
+        with:
+          path: "/tmp/sample-cassette.json"
+
+  tampered-record-is-rejected:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch a real, live-signed cassette
+        run: curl -sf https://runback.dev/sample-cassette.json -o /tmp/tampered.json
+      - name: corrupt it
+        run: |
+          node -e "
+            const fs = require('fs');
+            const d = JSON.parse(fs.readFileSync('/tmp/tampered.json', 'utf8'));
+            d.events[0].payload = { tampered: true };
+            fs.writeFileSync('/tmp/tampered.json', JSON.stringify(d));
+          "
+      - name: verify it — must fail
+        id: verify
+        continue-on-error: true
+        uses: ./packages/verify-action
+        with:
+          path: "/tmp/tampered.json"
+      - name: confirm the action actually caught it
+        run: |
+          if [ "${{ steps.verify.outcome }}" != "failure" ]; then
+            echo "::error::verify-action passed a tampered record — it should have failed"
+            exit 1
+          fi
+          echo "confirmed: tampering was caught"

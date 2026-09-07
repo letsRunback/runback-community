@@ -1,0 +1,25 @@
+# Self-hosted scheduler — the docker-compose equivalent of web/vercel.json's
+# `crons` array. Every line below is that file's schedule verbatim, curling
+# the same route with the same Bearer auth Vercel Cron sends automatically.
+# CRON_SECRET itself lives in /run/cron_secret (written by entrypoint.sh,
+# root-only), not here or in argv, so it never shows up in `docker top`.
+#
+# min hour dom mon dow   command
+0    3    *   *   *      /usr/local/bin/run-cron.sh /api/cron/retention
+0    4    *   *   *      /usr/local/bin/run-cron.sh /api/cron/benchmark
+0    3    *   *   *      /usr/local/bin/run-cron.sh /api/cron/policy-causes
+0    5    *   *   *      /usr/local/bin/run-cron.sh /api/cron/drift
+0    6    *   *   *      /usr/local/bin/run-cron.sh /api/cron/chargeback
+0    9    *   *   *      /usr/local/bin/run-cron.sh /api/cron/plg
+0    9    *   *   1      /usr/local/bin/run-cron.sh /api/cron/newsletter
+0    2    *   *   *      /usr/local/bin/run-cron.sh /api/cron/billing-reconcile
+0    7    *   *   *      /usr/local/bin/run-cron.sh /api/cron/signal-monitor
+0    8    *   *   *      /usr/local/bin/run-cron.sh /api/cron/corpus-miner
+0    10   *   *   *      /usr/local/bin/run-cron.sh /api/cron/social-dispatch
+0    *    *   *   *      /usr/local/bin/run-cron.sh /api/cron/siem
+20   *    *   *   *      /usr/local/bin/run-cron.sh /api/cron/seal-checkpoints
+40   *    *   *   *      /usr/local/bin/run-cron.sh /api/cron/scope-audit
+*/2  *    *   *   *      /usr/local/bin/run-cron.sh /api/cron/adversarial-guard
+*/15 *    *   *   *      /usr/local/bin/run-cron.sh /api/cron/error-digest
+30   *    *   *   *      /usr/local/bin/run-cron.sh /api/cron/governance-findings
+*/5  *    *   *   *      /usr/local/bin/run-cron.sh /api/cron/uptime

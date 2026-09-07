@@ -1,0 +1,197 @@
+# Determinism proof — the standing CI gate for the record/replay substrate.
+#
+# Runs on x86-64 Linux (where ptrace works), proving every tier on every push:
+#   1. the replay engine, gateway, and native→audit fusion unit tests
+#   2. the libc-interposition tier (LD_PRELOAD) — byte-exact offline replay
+#   3. the syscall tier (ptrace) — record/replay of getrandom/clock_gettime,
+#      then fusion of that recording into a signed, verified Runback audit
+#
+# This is what turns the ptrace tier from "authored" into "proven": the job is
+# red until `linux/test.sh` prints "PASS syscall replay reproduced the run
+# byte-for-byte". GitHub's ubuntu runners allow ptrace of a direct child, so no
+# extra capabilities are needed.
+#
+# Each tier also appends one structured JSON line per metric to
+# ci_results.jsonl (uploaded as a workflow artifact) so pass/fail and the
+# tiers' raw numbers (e.g. race.c's counter/max, rcb_land's retired-branch
+# count) are tracked over time instead of dying in the log — see
+# sql/create_ci_determinism_runs.sql / web/app/verify for the read side.
+name: determinism-proof
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest # x86-64 Linux
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Install workspace (tsx + packages)
+        run: npm ci
+
+      # Static gates. These ran nowhere before — not in CI, not in scripts/gate.sh
+      # — which is why lint sat red on main for weeks and why a documented API
+      # route could 404 in production without anything going red. They cost
+      # seconds; run them before the expensive native tiers.
+      - name: Lint
+        run: npm run lint
+
+      - name: Route guard + entitlement audits
+        run: npm run audit
+
+      # Both directions of schema drift. sql/ is applied by hand, so nothing else
+      # verifies the database matches the repo (check:schema), and nothing at all
+      # verified the reverse — code selecting columns no migration declares, which
+      # PostgREST answers with a 400 that every call site swallows (check:columns).
+      # Both exit 0 cleanly when the secrets are absent, so forks stay green.
+      - name: Schema drift (sql → db, and code → db)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npm run check:schema && npm run check:columns
+
+      - name: Production build
+        run: npm run build
+
+      - name: Unit tests — replay engine · gateway · native→audit fusion
+        run: |
+          set +e
+          npx vitest run
+          rc=$?
+          set -e
+          status=$([ "$rc" -eq 0 ] && echo pass || echo fail)
+          jq -n --arg tier "vitest" --arg metric "pass_fail" --argjson value $([ "$rc" -eq 0 ] && echo 1 || echo 0) \
+            --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+            '{tier:$tier, metric:$metric, value:$value, unit:"bool", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+          exit $rc
+
+      - name: Libc tier — LD_PRELOAD interposition, byte-exact replay
+        run: |
+          set +e
+          sh native/test.sh
+          rc=$?
+          set -e
+          status=$([ "$rc" -eq 0 ] && echo pass || echo fail)
+          jq -n --arg tier "native_libc" --arg metric "pass_fail" --argjson value $([ "$rc" -eq 0 ] && echo 1 || echo 0) \
+            --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+            '{tier:$tier, metric:$metric, value:$value, unit:"bool", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+          exit $rc
+
+      - name: Syscall tier — ptrace record/replay + signed-audit fusion
+        run: |
+          set +e
+          sh linux/test.sh
+          rc=$?
+          set -e
+          status=$([ "$rc" -eq 0 ] && echo pass || echo fail)
+          jq -n --arg tier "syscall_ptrace" --arg metric "pass_fail" --argjson value $([ "$rc" -eq 0 ] && echo 1 || echo 0) \
+            --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+            '{tier:$tier, metric:$metric, value:$value, unit:"bool", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+          exit $rc
+
+      - name: Scheduler tier — deterministic thread serialization (ptrace)
+        run: |
+          set +e
+          sh linux/sched_test.sh
+          rc=$?
+          set -e
+          status=$([ "$rc" -eq 0 ] && echo pass || echo fail)
+          jq -n --arg tier "scheduler" --arg metric "pass_fail" --argjson value $([ "$rc" -eq 0 ] && echo 1 || echo 0) \
+            --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+            '{tier:$tier, metric:$metric, value:$value, unit:"bool", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+          exit $rc
+
+      - name: Instruction-precise preemption — reproducible stop point (single-step)
+        run: |
+          set +e
+          sh linux/ss_test.sh
+          rc=$?
+          set -e
+          status=$([ "$rc" -eq 0 ] && echo pass || echo fail)
+          jq -n --arg tier "single_step" --arg metric "pass_fail" --argjson value $([ "$rc" -eq 0 ] && echo 1 || echo 0) \
+            --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+            '{tier:$tier, metric:$metric, value:$value, unit:"bool", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+          exit $rc
+
+      - name: RCB-keyed landing — counter wired to the single-step lander
+        run: |
+          set +e
+          out=$(sh linux/rcb_land_test.sh)
+          rc=$?
+          set -e
+          echo "$out"
+          status=$([ "$rc" -eq 0 ] && echo pass || echo fail)
+          total=$(echo "$out" | sed -n 's/.*rcb=\([0-9]*\).*/\1/p' | head -1)
+          jq -n --arg tier "rcb_land" --arg metric "pass_fail" --argjson value $([ "$rc" -eq 0 ] && echo 1 || echo 0) \
+            --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+            '{tier:$tier, metric:$metric, value:$value, unit:"bool", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+          if [ -n "$total" ]; then
+            jq -n --arg tier "rcb_land" --arg metric "rcb_total" --argjson value "$total" \
+              --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+              '{tier:$tier, metric:$metric, value:$value, unit:"retired_branches", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+          fi
+          exit $rc
+
+      - name: Data race — reproduced deterministically (instruction scheduler)
+        run: |
+          set +e
+          out=$(sh linux/race_test.sh)
+          rc=$?
+          set -e
+          echo "$out"
+          status=$([ "$rc" -eq 0 ] && echo pass || echo fail)
+          val=$(echo "$out" | sed -n 's/.*counter=\([0-9]*\).*/\1/p' | head -1)
+          max=$(echo "$out" | sed -n 's/.*max=\([0-9]*\).*/\1/p' | head -1)
+          jq -n --arg tier "race" --arg metric "pass_fail" --argjson value $([ "$rc" -eq 0 ] && echo 1 || echo 0) \
+            --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+            '{tier:$tier, metric:$metric, value:$value, unit:"bool", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+          if [ -n "$val" ] && [ -n "$max" ]; then
+            jq -n --arg tier "race" --arg metric "counter" --argjson value "$val" \
+              --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+              '{tier:$tier, metric:$metric, value:$value, unit:"count", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+            jq -n --arg tier "race" --arg metric "max" --argjson value "$max" \
+              --arg commit_sha "$GITHUB_SHA" --arg run_id "$GITHUB_RUN_ID" --arg status "$status" \
+              '{tier:$tier, metric:$metric, value:$value, unit:"count", commit_sha:$commit_sha, workflow_run_id:$run_id, status:$status}' >> ci_results.jsonl
+          fi
+          exit $rc
+
+      - name: Show captured cassettes (artifact for inspection)
+        if: always()
+        run: |
+          echo '--- libc tier cassette ---';   sed 's/^/  /' native/native.cassette 2>/dev/null || true
+          echo '--- syscall tier cassette ---'; sed 's/^/  /' linux/sys.cassette       2>/dev/null || true
+
+      - name: Upload structured results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-determinism-results
+          path: ci_results.jsonl
+          if-no-files-found: ignore
+
+      - name: Persist results to Supabase (ci_determinism_runs)
+        if: always()
+        continue-on-error: true
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ ! -f ci_results.jsonl ]; then
+            echo "no ci_results.jsonl produced (earlier steps didn't run) — skipping"
+            exit 0
+          fi
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not configured — skipping persistence"
+            exit 0
+          fi
+          rows=$(jq -s '.' ci_results.jsonl)
+          curl -sf -X POST "$SUPABASE_URL/rest/v1/ci_determinism_runs" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=minimal" \
+            -d "$rows" || echo "insert failed (non-fatal — see ci-determinism-results artifact)"

@@ -1,0 +1,43 @@
+{
+  "name": "runback",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Runback — Chrome DevTools for AI agents. Step-through replay and inspection for instrumented agent runs.",
+  "workspaces": [
+    "packages/*",
+    "web",
+    "examples/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @runback/web",
+    "build": "npm run build --workspace @runback/web",
+    "start": "npm run start --workspace @runback/web",
+    "lint": "npm run lint --workspace @runback/web",
+    "demo": "npm run start --workspace @runback/example-research-email-agent",
+    "seed": "tsx scripts/seed-fixture.ts",
+    "demo:record": "node scripts/demo-record.cjs",
+    "test": "vitest run",
+    "audit": "node scripts/audit-route-guards.mjs && node scripts/audit-entitlements.mjs",
+    "check:schema": "node scripts/check-schema.mjs",
+    "check:columns": "node scripts/audit-db-columns.mjs",
+    "gate": "bash scripts/gate.sh"
+  },
+  "devDependencies": {
+    "@runback/schema": "*",
+    "dotenv": "^16.4.7",
+    "playwright": "^1.61.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5",
+    "vitest": "^3.2.6"
+  },
+  "overrides": {
+    "vite": "^6.4.3",
+    "esbuild": "^0.25.0",
+    "postcss": "^8.5.25",
+    "sharp": "^0.35.3",
+    "next": {
+      "postcss": "^8.5.25"
+    },
+    "undici": "^6.27.0"
+  }
+}

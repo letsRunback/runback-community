@@ -1,0 +1,34 @@
+node_modules/
+.next/
+out/
+dist/
+.env
+.community-check-scratch/
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+.vercel
+
+# secrets — belt & suspenders (keep .env.example committable)
+.env.*
+!.env.example
+# native/syscall build artifacts
+*.dylib
+*.so
+.secrets/
+
+# Python (packages/sdk-python)
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+.pytest_cache/
+build/
+*.egg
+
+# Saved auth for local QA scripts — holds a live Supabase access_token, so a
+# stray `git add -A` would publish working credentials.
+session.json
+# Throwaway browser-driving scripts used to click through the app by hand.
+check_*.mjs

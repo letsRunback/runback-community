@@ -1,0 +1,7 @@
+{
+  "name": "@runback/verify-action",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Source for the Runback Verify GitHub Action (composite action, no build step) — see README.md for publishing notes.",
+  "license": "MIT"
+}

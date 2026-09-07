@@ -1,0 +1,19 @@
+apiVersion: v2
+name: runback
+description: Self-hosted Runback — capture, replay, gate, and audit AI agent decisions, entirely inside your own cluster.
+type: application
+version: 0.1.0
+appVersion: "0.4.0"
+home: https://runback.dev
+sources:
+  - https://github.com/letsRunback/runback
+keywords:
+  - ai
+  - ai-agents
+  - observability
+  - governance
+  - audit
+  - compliance
+maintainers:
+  - name: Runback
+    url: https://runback.dev/support

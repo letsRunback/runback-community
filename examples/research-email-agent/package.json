@@ -1,0 +1,20 @@
+{
+  "name": "@runback/example-research-email-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A small instrumented agent (research → summarize → email) that fails on the send step, to showcase Runback.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx run.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/groq": "^3.0.41",
+    "@runback/sdk": "*",
+    "ai": "^6.0.204",
+    "dotenv": "^16.4.7",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

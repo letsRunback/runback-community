@@ -1,0 +1,35 @@
+Runback has been deployed as "{{ include "runback.fullname" . }}" in namespace {{ .Release.Namespace }}.
+
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+It should become reachable at:
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+No Ingress is configured (ingress.enabled=false). Reach it from inside the
+cluster at:
+  http://{{ include "runback.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+
+Or port-forward for a quick check:
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "runback.fullname" . }} 8080:{{ .Values.service.port }}
+  open http://localhost:8080
+{{- end }}
+
+Check rollout health:
+  kubectl rollout status -n {{ .Release.Namespace }} deployment/{{ include "runback.fullname" . }}
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+Liveness/readiness both poll GET /api/health, which checks real database
+connectivity (not just process-up) — a pod stuck NotReady usually means the
+data layer (Postgres/Supabase) is unreachable from inside the cluster, not a
+problem with this chart. See docs/SELF_HOSTING.md#data-layer.
+
+{{- if not .Values.image.repository }}
+
+WARNING: values.yaml image.repository is empty — no image is published to a
+public registry yet. Build one from the repo root Dockerfile, push it
+somewhere this cluster can pull from, and set image.repository before this
+Deployment can actually start:
+  docker build -t <your-registry>/runback:{{ .Chart.AppVersion }} .
+  docker push <your-registry>/runback:{{ .Chart.AppVersion }}
+{{- end }}
