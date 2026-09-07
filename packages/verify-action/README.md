@@ -8,7 +8,7 @@ being noticed later. No account, no API key.
 ## Usage
 
 ```yaml
-- uses: letsRunback/runback-verify-action@v1
+- uses: letsRunback/runback-verify-action@v1   # NOT YET PUBLISHED — see "Publishing" below
   with:
     path: "audit-exports/**/*.json"
 ```

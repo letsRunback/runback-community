@@ -36,6 +36,19 @@ export interface ChangelogEntry extends ChangelogRelease {
 // from the commit(s) that shipped it.
 const RELEASES: ChangelogRelease[] = [
   {
+    version: "2026.09.07",
+    date: "2026-09-07",
+    summary: "Community edition published and tagged v0.1.0; replay and the audit ledger are free on every plan; database row-level security enforced.",
+    highlights: [
+      "The Community edition is public at github.com/letsRunback/runback-community, tagged v0.1.0, under Community Licence v2.0 — source-available: read, modify and redistribute, with one limit (no hosted resale). v1.0 granted no source rights at all and was replaced.",
+      "Deterministic time-travel replay and the tamper-evident audit ledger are now granted on every plan including free. The licence described them as Community capabilities while the code gated them at Pro and Enterprise.",
+      "Evals and the CI release gate work on every tier, hosted or self-hosted.",
+      "Database row-level security is live: reads on the migrated paths run as a role that cannot bypass RLS, verified in both directions against production. Other read paths and all writes still run as a role that does bypass it — /security tracks the precise state.",
+      "API keys can be issued telemetry-only, so a key leaked from an application can post runs and nothing else.",
+      "Compliance exports verify the ledger before attesting to it, and controls evidenced only by a run count now report as partial rather than compliant.",
+    ],
+  },
+  {
     version: "2026.08.31",
     date: "2026-08-31",
     summary: "Advanced the tenant-isolation (RLS) migration and added session revocation.",

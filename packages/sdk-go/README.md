@@ -1,5 +1,11 @@
 # @runback/sdk-go — Phase 1
 
+> **Not yet published as a Go module.** `go get github.com/letsRunback/runback-go`
+> does not resolve — that repository does not exist yet. This package ships in the
+> Community repository at `packages/sdk-go`; vendor it, or add
+> `replace github.com/letsRunback/runback-go => ./packages/sdk-go` to your `go.mod`.
+
+
 Event capture, redaction, and ingest for Go agents. Mirrors
 `packages/sdk/src/core.ts`'s framework-agnostic `startRun()`: call methods by
 hand at the point in your own agent loop where a model or tool call happens.

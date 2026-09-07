@@ -73,9 +73,15 @@ const REQUIREMENTS: {
     clause: "Art. 19 / 26(6)",
     requirement:
       "Logs shall be kept for a period appropriate to the intended purpose, at least six months.",
-    status: "supplied",
+    // "supplied" overstated this. Six months is 180 days; retention is 7 (free),
+    // 30 (starter), 60 (growth/scale), 90 (pro) and unlimited only on Enterprise
+    // — so on every plan but Enterprise the product's own sweep deletes the logs
+    // before the period this row claims to supply. The vertical floors reach 180
+    // for healthcare only. Naming the number the reader has to meet is more use
+    // than a status word.
+    status: "partial",
     mechanism:
-      "Retention is configured per plan and enforced by a scheduled sweep. Legal hold suspends deletion for runs under a preservation obligation, and if the holds table cannot be read the sweep is skipped rather than proceeding — the failure mode favours keeping data.",
+      "Retention is configured per plan and enforced by a scheduled sweep, but only Enterprise (unlimited) retains for six months by default — Pro is 90 days, Scale and Growth 60, Starter 30, Community 7. Regulated verticals raise the floor (healthcare 180 days). Meeting the six-month obligation means Enterprise, a vertical floor that covers it, or self-hosting with your own retention. Legal hold suspends deletion for runs under a preservation obligation, and if the holds table cannot be read the sweep is skipped rather than proceeding — the failure mode favours keeping data.",
   },
   {
     clause: "Art. 12 — implied",

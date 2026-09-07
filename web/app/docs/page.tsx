@@ -549,7 +549,12 @@ await run.finish({ output: answer, status: "success" });`}</Code>
 
           <Section id="sdk-go" title="Go (preview)" tier="Community">
             <p>
-              <code>github.com/letsRunback/runback-go</code> covers event capture, redaction, and
+              The Go SDK ships in the Community repository at{" "}
+              <code>packages/sdk-go</code>. It is <strong>not yet published as a Go
+              module</strong> — <code>go get github.com/letsRunback/runback-go</code> will not
+              resolve — so vendor it or add a{" "}
+              <code>replace github.com/letsRunback/runback-go =&gt; ./packages/sdk-go</code> to
+              your <code>go.mod</code> for now. It covers event capture, redaction, and
               ingest — the same manual-recording shape as above, called from a Go agent loop.
               Redaction is on by default (standard tier): emails, SSNs, credit cards, private
               key blocks, and common provider API keys/tokens are scrubbed from event content
@@ -1137,7 +1142,7 @@ curl -H "Authorization: Bearer \$RUNBACK_API_KEY" \\
                 ["Audit exports — per day", "10", "50", "200", "500", "1,000", "Custom"],
               ]}
             />
-            <Note>Rate limit headers on every API response: <code>X-RateLimit-Limit</code>  <code>X-RateLimit-Remaining</code>  <code>X-RateLimit-Reset</code>. Requests over the limit return <code>429 Too Many Requests</code>.</Note>
+            <Note>Requests over the limit return <code>429 Too Many Requests</code> with a <code>retry-after</code> header. Per-request quota headers (<code>X-RateLimit-*</code>) are not currently sent — this previously said they were on every response, and no code emits them.</Note>
           </Section>
         </main>
       </div>

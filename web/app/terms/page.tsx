@@ -11,7 +11,7 @@ export const metadata = pageMetadata({
     "The terms that govern use of Runback's website, managed cloud, and software — including the free Community edition and the licensed Enterprise features.",
 });
 
-const UPDATED = "19 July 2026";
+const UPDATED = "7 September 2026";
 
 export default function Terms() {
   return (

@@ -10,7 +10,7 @@ export const metadata = pageMetadata({
     "How Runback collects, uses, and protects personal data — and why, when you self-host, your agent traces never reach us at all.",
 });
 
-const UPDATED = "19 July 2026";
+const UPDATED = "7 September 2026";
 
 export default function Privacy() {
   return (

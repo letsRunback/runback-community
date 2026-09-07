@@ -10,7 +10,7 @@ export const metadata = pageMetadata({
     "Runback's Data Processing Agreement for managed-cloud customers — roles, sub-processors, security measures, international transfers, and your instructions. Self-host customers don't need a DPA because we never receive your data.",
 });
 
-const UPDATED = "19 July 2026";
+const UPDATED = "7 September 2026";
 
 export default function Dpa() {
   return (
