@@ -13,9 +13,9 @@
     "guard": "node ../scripts/audit-route-guards.mjs"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/anthropic": "^3.0.116",
     "@ai-sdk/groq": "^3.0.41",
-    "@ai-sdk/openai": "^2.0.0",
+    "@ai-sdk/openai": "^3.0.109",
     "@runback/policy": "*",
     "@runback/redact": "*",
     "@runback/replay": "*",
